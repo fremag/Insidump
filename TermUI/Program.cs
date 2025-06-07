@@ -1,4 +1,5 @@
-﻿using Terminal.Gui.App;
+﻿using NLog;
+using Terminal.Gui.App;
 using TermUI.Core;
 
 namespace TermUI;
@@ -9,9 +10,25 @@ internal static class Program
     {
         Application.Init();
         MessageBus messageBus = new();
-        var app = new MainView(messageBus);
+        using var mainModel = new DumpModel();
+        var app = new DumpView(messageBus, mainModel);
         Application.Run(app);
         app.Dispose();
         Application.Shutdown();
+    }
+}
+
+public class DumpModel : IMainModel
+{
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    
+    public void OpenDumpFile(string dumpFileName)
+    {
+        Logger.ExtInfo($"Opening dump file...", new {dumpFileName});    
+    }
+
+    public void Dispose()
+    {
+        Logger.ExtInfo("Dispose.");
     }
 }

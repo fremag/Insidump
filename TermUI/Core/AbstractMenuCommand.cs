@@ -1,6 +1,6 @@
 ﻿namespace TermUI.Core;
 
-public abstract class AbstractAppCommand(string menu, string item, string helpText, IMainView mainView)
+public abstract class AbstractMenuCommand(string menu, string item, string helpText, IMainView mainView)
 {
     protected IMainView MainView { get; } = mainView;
     

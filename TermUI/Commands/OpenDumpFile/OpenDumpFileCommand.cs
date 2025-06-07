@@ -2,9 +2,9 @@
 using Terminal.Gui.Views;
 using TermUI.Core;
 
-namespace TermUI.Commands;
+namespace TermUI.Commands.OpenDumpFile;
 
-public class OpenDumpFileCommand(IMainView mainView) : AbstractAppCommand("_File", "_Open...", "Open new dump file", mainView)
+public class OpenDumpFileCommand(IMainView mainView) : AbstractMenuCommand("_File", "_Open...", "Open new dump file", mainView)
 {
     public override void Action()
     {
@@ -23,9 +23,4 @@ public class OpenDumpFileCommand(IMainView mainView) : AbstractAppCommand("_File
             MainView.MessageBus.SendMessage(new OpenDumpFileMessage(file));
         }
     }
-}
-
-public class OpenDumpFileMessage(string file) : IMessage
-{
-    public string File { get; } = file;
 }
