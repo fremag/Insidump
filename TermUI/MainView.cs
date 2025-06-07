@@ -20,10 +20,13 @@ public interface IMainModel : IDisposable
     
 }
 
-public class MainView<T> : Toplevel, IMainView where T : IMainModel
+public class MainView<T> : Toplevel, IMainView,
+    IMessageListener<StatusMessage>
+    where T : IMainModel
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private StatusBar StatusBar { get; } = new() { CanFocus = false };
+    private Shortcut StatusLabel { get; }= new(Key.Empty, string.Empty, () => { });
     private MenuBarv2 MainMenuBar { get; }
 
     private TabView MainTabView { get; } = new()
@@ -35,19 +38,26 @@ public class MainView<T> : Toplevel, IMainView where T : IMainModel
     };
 
     public IMessageBus MessageBus { get; }
-    public T MainModel { get; }
+    protected T MainModel { get; }
 
-    public MainView(MessageBus messageBus, T mainModel)
+    protected MainView(MessageBus messageBus, T mainModel)
     {
         MessageBus = messageBus;
         MainModel = mainModel;
+        StatusBar.Add(StatusLabel);
         MainMenuBar = BuildMenuBar();
         Add(MainMenuBar, MainTabView, StatusBar);
-        IEnumerable<object> messageHandlers = GetMessageHandlers();
+    }
+
+    public override void OnLoaded()
+    {
+        MessageBus.Subscribe(this);
+        var messageHandlers = GetMessageHandlers();
         foreach(var messageHandler  in messageHandlers)
         {
             MessageBus.Subscribe(messageHandler);
         }
+        base.OnLoaded();
     }
 
     public void NewTab(string name, View view)
@@ -107,9 +117,13 @@ public class MainView<T> : Toplevel, IMainView where T : IMainModel
         e.Handled = true;
     }
 
-    protected virtual AbstractMenuCommand[] GetMenuCommands()
-    {
-        return [new QuitCommand(this)];
-    }
+    protected virtual AbstractMenuCommand[] GetMenuCommands() => [new QuitCommand(this)];
     protected virtual IEnumerable<object> GetMessageHandlers() => [];
+    
+    [UiScheduler]
+    public void HandleMessage(StatusMessage message)
+    {
+        StatusLabel.Text = message.Status;
+        StatusBar.NeedsDraw = true;          
+    }
 }
