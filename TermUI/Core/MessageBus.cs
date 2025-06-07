@@ -4,7 +4,15 @@ using Terminal.Gui.App;
 
 namespace TermUI.Core;
 
-public class MessageBus
+public interface IMessageBus
+{
+    List<object> GetSubscribers(Type msgType);
+    void Subscribe(object? subscriber);
+    void Unsubscribe(object? subscriber);
+    void SendMessage<T>(T message) where T : IMessage;
+}
+
+public class MessageBus : IMessageBus
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 

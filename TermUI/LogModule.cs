@@ -1,4 +1,3 @@
-using MediatR;
 using NLog;
 using TermUI.Core;
 
@@ -11,7 +10,7 @@ public class LogModuleConfig
 
 public class LogModule : UiModule<LogModuleConfig>
 {
-    public LogModule(IMediator mediator) : base(LogManager.GetCurrentClassLogger(), mediator)
+    public LogModule(MessageBus messageBus) : base(LogManager.GetCurrentClassLogger(), messageBus)
     {
     }
 
