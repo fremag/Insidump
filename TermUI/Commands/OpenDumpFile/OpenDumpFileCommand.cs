@@ -13,7 +13,7 @@ public class OpenDumpFileCommand(IMainView mainView) : AbstractMenuCommand("_Fil
             OpenMode = OpenMode.File,
             AllowedTypes = [new AllowedType("Dump file", "dmp")],
             AllowsMultipleSelection = false,
-            Path = @"E:\Projects\dumps\MemoDummy"
+            Path = @"E:\Projects\TermUI\pbrt-runner.dmp"
         };
 
         Application.Run(fileDialog);

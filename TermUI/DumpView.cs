@@ -1,6 +1,7 @@
 ﻿using NLog;
 using TermUI.Commands.OpenDumpFile;
 using TermUI.Core;
+using TermUI.Model;
 
 namespace TermUI;
 
