@@ -1,6 +1,8 @@
 ﻿using NLog;
 using TermUI.Commands;
+using TermUI.Commands.Tasks;
 using TermUI.Core;
+using TaskStatus = TermUI.Commands.Tasks.TaskStatus;
 
 namespace TermUI;
 
@@ -9,40 +11,48 @@ public class DumpModel(MessageBus messageBus) : IMainModel
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private MessageBus MessageBus { get; } = messageBus;
 
+    public void Dispose()
+    {
+        Logger.ExtInfo("Dispose.");
+    }
+
     public void OpenDumpFile(string dumpFileName)
     {
         Task.Run(() =>
             {
                 Logger.ExtInfo(new { dumpFileName });
-                MessageBus.SendMessage(new StatusMessage($"Loading: {dumpFileName} ..."));
+                Status($"Loading: {dumpFileName} ...");
                 var cancellationTokenSource = new CancellationTokenSource();
                 var token = cancellationTokenSource.Token;
-                
-                MessageBus.SendMessage(new TaskMessage(TaskStatus.Begin, dumpFileName, 0, 100, cancellationTokenSource));
+
+                Progress(TaskStatus.Begin, dumpFileName, 0, 100, cancellationTokenSource);
                 for (var i = 0; i < 10; i++)
                 {
-                    MessageBus.SendMessage(new TaskMessage(TaskStatus.Running, dumpFileName, i * 10, 100, cancellationTokenSource));
-                    Logger.ExtInfo("Progress...", new { i });
+                    Progress(TaskStatus.Running, dumpFileName, i * 10, 100, cancellationTokenSource);
                     Thread.Sleep(TimeSpan.FromMilliseconds(1000));
                     if (token.IsCancellationRequested)
                     {
-                        MessageBus.SendMessage(new StatusMessage($"Canceled: {dumpFileName}"));
+                        Status($"Canceled: {dumpFileName}");
                         break;
                     }
                 }
 
-                MessageBus.SendMessage(new TaskMessage(TaskStatus.End, dumpFileName, 100, 100, cancellationTokenSource));
+                Progress(TaskStatus.End, dumpFileName, 100, 100, cancellationTokenSource);
                 if (!token.IsCancellationRequested)
                 {
-                    MessageBus.SendMessage(new StatusMessage(dumpFileName));
+                    Status(dumpFileName);
                 }
             }
         );
     }
 
-    public void Dispose()
+    private void Status(string message)
     {
-        Logger.ExtInfo("Dispose.");
+        MessageBus.SendMessage(new StatusMessage(message));
+    }
+
+    private void Progress(TaskStatus status, string name, int progress, int max, CancellationTokenSource cancellationTokenSource)
+    {
+        MessageBus.SendMessage(new TaskMessage(status, name, progress, max, cancellationTokenSource));
     }
 }
-

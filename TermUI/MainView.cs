@@ -4,7 +4,9 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using TermUI.Commands;
+using TermUI.Commands.Tasks;
 using TermUI.Core;
+using TaskStatus = TermUI.Commands.Tasks.TaskStatus;
 
 namespace TermUI;
 

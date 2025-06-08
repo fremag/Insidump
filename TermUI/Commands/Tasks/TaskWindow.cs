@@ -5,7 +5,7 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using TermUI.Core;
 
-namespace TermUI;
+namespace TermUI.Commands.Tasks;
 
 public class TaskWindow : Window
 {
