@@ -20,6 +20,12 @@ public static class LogUtils
         logger.Info($"{caller}: {sb}");
     }
 
+    public static string ToLogString(this object? value1)
+    {
+        var sb = GetLogString(value1);
+        return sb.ToString();
+    }
+    
     private static StringBuilder GetLogString(object? value1, object? value2 = null, object? value3 = null, object? value4= null, object? value5 = null, Exception? ex = null)
     {
         StringBuilder sb = new();

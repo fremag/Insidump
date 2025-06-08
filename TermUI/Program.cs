@@ -1,5 +1,5 @@
-﻿using NLog;
-using Terminal.Gui.App;
+﻿using Terminal.Gui.App;
+using Terminal.Gui.Input;
 using TermUI.Core;
 
 namespace TermUI;
@@ -9,6 +9,7 @@ internal static class Program
     private static void Main()
     {
         Application.Init();
+        Application.QuitKey = Key.F10;
         MessageBus messageBus = new();
         using var mainModel = new DumpModel(messageBus);
         var app = new DumpView(messageBus, mainModel);
@@ -16,26 +17,4 @@ internal static class Program
         app.Dispose();
         Application.Shutdown();
     }
-}
-
-public class DumpModel(MessageBus messageBus) : IMainModel
-{
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private MessageBus MessageBus { get; } = messageBus;
-    
-    public void OpenDumpFile(string dumpFileName)
-    {
-        Logger.ExtInfo($"Opening dump file...", new {dumpFileName});
-        MessageBus.SendMessage(new StatusMessage(dumpFileName));
-    }
-
-    public void Dispose()
-    {
-        Logger.ExtInfo("Dispose.");
-    }
-}
-
-public class StatusMessage(string status) : IMessage
-{
-    public string Status { get; } = status;
 }

@@ -1,14 +1,11 @@
-﻿using TermUI.Commands.OpenDumpFile;
+﻿using NLog;
+using TermUI.Commands.OpenDumpFile;
 using TermUI.Core;
 
 namespace TermUI;
 
-public class DumpView : MainView<DumpModel>
+public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<DumpModel>(messageBus, mainModel, LogManager.GetCurrentClassLogger())
 {
-    public DumpView(MessageBus messageBus, DumpModel mainModel) : base(messageBus, mainModel)
-    {
-    }
-
     protected override AbstractMenuCommand[] GetMenuCommands()
     {
         var commands = new AbstractMenuCommand[] {new OpenDumpFileCommand(this)}

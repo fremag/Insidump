@@ -1,7 +1,7 @@
 using NLog;
 using TermUI.Core;
 
-namespace TermUI;
+namespace TermUI.Modules;
 
 
 public class LogModuleConfig

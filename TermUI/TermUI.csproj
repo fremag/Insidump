@@ -9,8 +9,15 @@
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
+        <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="4.0.0-beta.24360.3" />
         <PackageReference Include="NLog" Version="5.5.0"/>
         <PackageReference Include="Terminal.Gui" Version="2.0.0-prealpha.1985"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="NLog.config">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

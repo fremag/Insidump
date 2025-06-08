@@ -21,10 +21,11 @@ public interface IMainModel : IDisposable
 }
 
 public class MainView<T> : Toplevel, IMainView,
-    IMessageListener<StatusMessage>
+    IMessageListener<StatusMessage>,
+    IMessageListener<TaskMessage>
     where T : IMainModel
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private Logger Logger { get; }
     private StatusBar StatusBar { get; } = new() { CanFocus = false };
     private Shortcut StatusLabel { get; }= new(Key.Empty, string.Empty, () => { });
     private MenuBarv2 MainMenuBar { get; }
@@ -39,14 +40,18 @@ public class MainView<T> : Toplevel, IMainView,
 
     public IMessageBus MessageBus { get; }
     protected T MainModel { get; }
-
-    protected MainView(MessageBus messageBus, T mainModel)
+    protected TaskWindow TaskWindow { get; }
+    
+    protected MainView(MessageBus messageBus, T mainModel, Logger logger)
     {
         MessageBus = messageBus;
         MainModel = mainModel;
+        Logger = logger;
         StatusBar.Add(StatusLabel);
         MainMenuBar = BuildMenuBar();
         Add(MainMenuBar, MainTabView, StatusBar);
+        
+        TaskWindow = new TaskWindow();
     }
 
     public override void OnLoaded()
@@ -123,7 +128,31 @@ public class MainView<T> : Toplevel, IMainView,
     [UiScheduler]
     public void HandleMessage(StatusMessage message)
     {
-        StatusLabel.Text = message.Status;
-        StatusBar.NeedsDraw = true;          
+        Logger.ExtInfo( new { message.Status, Type=message.GetType().Name });
+        Application.Invoke(() => {
+            StatusLabel.Text = message.Status;
+            StatusBar.NeedsDraw = true;
+        });
+    }
+
+    [UiScheduler]
+    public void HandleMessage(TaskMessage message)
+    {
+        switch (message.Status)
+        {
+            case TaskStatus.Begin:
+                Add(TaskWindow);
+                TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
+                break;
+            case TaskStatus.Running:
+                TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
+                break;
+            case TaskStatus.End:
+                Remove(TaskWindow);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        Application.Invoke(() => NeedsDraw = true);
     }
 }
