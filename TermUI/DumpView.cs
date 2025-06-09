@@ -1,4 +1,5 @@
 ﻿using NLog;
+using TermUI.Commands.ClrTypeInfos;
 using TermUI.Commands.OpenDumpFile;
 using TermUI.Core;
 using TermUI.Model;
@@ -9,11 +10,18 @@ public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<Dum
 {
     protected override AbstractMenuCommand[] GetMenuCommands()
     {
-        var commands = new AbstractMenuCommand[] {new OpenDumpFileCommand(this)}
+        var commands = new AbstractMenuCommand[]
+            {
+                new OpenDumpFileCommand(this),
+                new DisplayClrTypeInfosCommand(this)
+            }
             .Concat(base.GetMenuCommands())
             .ToArray();
         return commands;
     }
     
-    protected override IEnumerable<object> GetMessageHandlers() => [new OpenDumpFileHandler(MainModel)];
+    protected override IEnumerable<object> GetMessageHandlers() => [
+        new OpenDumpFileHandler(MainModel),
+        new DisplayClrTypeInfosHandler(MainModel)
+    ];
 }
