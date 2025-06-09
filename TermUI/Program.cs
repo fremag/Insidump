@@ -14,6 +14,7 @@ internal static class Program
         MessageBus messageBus = new();
         using var mainModel = new DumpModel(messageBus);
         var app = new DumpView(messageBus, mainModel);
+        // var app = new TestApp();
         Application.Run(app);
         app.Dispose();
         Application.Shutdown();

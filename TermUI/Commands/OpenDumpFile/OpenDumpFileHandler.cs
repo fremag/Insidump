@@ -9,6 +9,11 @@ public class OpenDumpFileHandler(DumpModel dumpModel) : IMessageListener<OpenDum
 
     public void HandleMessage(OpenDumpFileMessage message)
     {
-        DumpModel.OpenDumpFile(message.File);
+        Task.Run(() =>
+        {
+            var dumpInfo = DumpModel.OpenDumpFile(message.File);
+            var dumpInfoView = new DumpInfoView(dumpInfo);
+            DumpModel.MessageBus.SendMessage(new DisplayViewMessage { Name = "Info", View = dumpInfoView });
+        });
     }
 }

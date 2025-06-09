@@ -4,6 +4,7 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using TermUI.Commands;
+using TermUI.Commands.OpenDumpFile;
 using TermUI.Commands.Tasks;
 using TermUI.Core;
 using TaskStatus = TermUI.Commands.Tasks.TaskStatus;
@@ -24,6 +25,7 @@ public interface IMainModel : IDisposable
 
 public class MainView<T> : Toplevel, IMainView,
     IMessageListener<StatusMessage>,
+    IMessageListener<DisplayViewMessage>,
     IMessageListener<TaskMessage>
     where T : IMainModel
 {
@@ -77,8 +79,11 @@ public class MainView<T> : Toplevel, IMainView,
         };
 
         newTab.MouseEvent += OnMouse;
-        MainTabView.AddTab(newTab, true);
-        Application.Invoke(() => { MainTabView.NeedsDraw = true; });
+        Application.Invoke(() =>
+        {
+            MainTabView.AddTab(newTab, true);
+            MainTabView.NeedsDraw = true;
+        });
     }
 
     public void Quit()
@@ -156,5 +161,10 @@ public class MainView<T> : Toplevel, IMainView,
                 throw new ArgumentOutOfRangeException();
         }
         Application.Invoke(() => NeedsDraw = true);
+    }
+
+    public void HandleMessage(DisplayViewMessage message)
+    {
+        NewTab(message.Name, message.View);
     }
 }

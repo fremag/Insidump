@@ -13,6 +13,5 @@ public class DisplayClrTypeInfosHandler(DumpModel dumpModel) : IMessageListener<
         {
             var infos = DumpModel.GetClrTypeInfos().Result;
         });
-        
     }
 }
