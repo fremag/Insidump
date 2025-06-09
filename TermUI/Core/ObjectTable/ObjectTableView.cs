@@ -6,8 +6,6 @@ namespace TermUI.Core.ObjectTable;
 
 public class ObjectTableView<T> : TableView
 {
-    private ObjectTableSource<T> ObjectTableSource { get; }
-    
     public ObjectTableView(ObjectTableSource<T> objectTableSource)
     {
         ObjectTableSource = objectTableSource;
@@ -22,6 +20,8 @@ public class ObjectTableView<T> : TableView
         Enabled = true;
         Table = objectTableSource;
     }
+
+    private ObjectTableSource<T> ObjectTableSource { get; }
 
     public void SetFilter(string regex, string column)
     {

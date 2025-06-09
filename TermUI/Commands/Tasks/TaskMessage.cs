@@ -2,8 +2,14 @@
 
 namespace TermUI.Commands.Tasks;
 
-public enum TaskStatus {Begin, Running, End}
-public class TaskMessage(TaskStatus status, string name, int progress, int max, CancellationTokenSource cancellationTokenSource)  : IMessage
+public enum TaskStatus
+{
+    Begin,
+    Running,
+    End
+}
+
+public class TaskMessage(TaskStatus status, string name, int progress, int max, CancellationTokenSource cancellationTokenSource) : IMessage
 {
     public TaskStatus Status { get; } = status;
     public string Name { get; } = name;

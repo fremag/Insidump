@@ -13,14 +13,14 @@ public class ClassHelperTests
         var genericInterfaceArguments = ClassHelper.GetGenericInterfaceArguments(new DummyListener(), typeof(IMessageListener<>));
         Check.That(genericInterfaceArguments).ContainsExactly(typeof(BasicMessage<string>), typeof(BasicMessage<int>), typeof(BasicMessage<DateTime>));
     }
-    
+
     [Test]
     public void GetGenericInterfaceArguments_NoInterfaceTest()
     {
         var genericInterfaceArguments = ClassHelper.GetGenericInterfaceArguments("abcdef", typeof(IMessageListener<>));
         Check.That(genericInterfaceArguments).IsEmpty();
     }
-    
+
     [Test]
     public void GetGenericInterfaceArguments_NullObjectTest()
     {

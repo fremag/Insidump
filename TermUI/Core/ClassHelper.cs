@@ -13,7 +13,7 @@ public static class ClassHelper
 
         var type = obj.GetType();
         var interfaces = type.GetInterfaces();
-        
+
         foreach (var typeInterface in interfaces)
         {
             if (typeInterface.IsGenericType && typeInterface.GetGenericTypeDefinition().IsAssignableFrom(genericInterface))

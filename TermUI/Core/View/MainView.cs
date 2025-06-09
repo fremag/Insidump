@@ -19,7 +19,6 @@ public interface IMainView
 
 public interface IMainModel : IDisposable
 {
-    
 }
 
 public class MainView<T> : Toplevel, IMainView,
@@ -28,9 +27,21 @@ public class MainView<T> : Toplevel, IMainView,
     IMessageListener<TaskMessage>
     where T : IMainModel
 {
+    protected MainView(MessageBus messageBus, T mainModel, Logger logger)
+    {
+        MessageBus = messageBus;
+        MainModel = mainModel;
+        Logger = logger;
+        StatusBar.Add(StatusLabel);
+        MainMenuBar = BuildMenuBar();
+        Add(MainMenuBar, MainTabView, StatusBar);
+
+        TaskWindow = new TaskWindow();
+    }
+
     private Logger Logger { get; }
     private StatusBar StatusBar { get; } = new() { CanFocus = false };
-    private Shortcut StatusLabel { get; }= new(Key.Empty, string.Empty, () => { });
+    private Shortcut StatusLabel { get; } = new(Key.Empty, string.Empty, () => { });
     private MenuBarv2 MainMenuBar { get; }
 
     private TabView MainTabView { get; } = new()
@@ -40,58 +51,85 @@ public class MainView<T> : Toplevel, IMainView,
         Height = Dim.Fill(1),
         Enabled = true,
         CanFocus = true,
-        Style = {ShowTopLine = true, ShowBorder = true, TabsOnBottom = false}
+        Style = { ShowTopLine = true, ShowBorder = true, TabsOnBottom = false }
     };
 
-    public IMessageBus MessageBus { get; }
     protected T MainModel { get; }
     private TaskWindow TaskWindow { get; }
-    
-    protected MainView(MessageBus messageBus, T mainModel, Logger logger)
-    {
-        MessageBus = messageBus;
-        MainModel = mainModel;
-        Logger = logger;
-        StatusBar.Add(StatusLabel);
-        MainMenuBar = BuildMenuBar();
-        Add(MainMenuBar, MainTabView, StatusBar);
-        
-        TaskWindow = new TaskWindow();
-    }
 
-    public override void OnLoaded()
-    {
-        MessageBus.Subscribe(this);
-        var messageHandlers = GetMessageHandlers();
-        foreach(var messageHandler  in messageHandlers)
-        {
-            MessageBus.Subscribe(messageHandler);
-        }
-        base.OnLoaded();
-    }
+    public IMessageBus MessageBus { get; }
 
     public void NewTab(string name, Terminal.Gui.ViewBase.View view)
     {
-        Logger.ExtInfo(new{name, TabType=view.GetType().Name});
+        Logger.ExtInfo(new { name, TabType = view.GetType().Name });
         Application.Invoke(() =>
         {
             var newTab = new Tab
             {
                 DisplayText = name,
-                View = view 
+                View = view
             };
 
             newTab.MouseEvent += OnMouse;
             MainTabView.AddTab(newTab, true);
             MainTabView.NeedsDraw = true;
         });
-        
     }
 
     public void Quit()
     {
         Logger.ExtInfo("Quit.");
         Application.RequestStop();
+    }
+
+    public void HandleMessage(DisplayViewMessage message)
+    {
+        NewTab(message.Name, message.View);
+    }
+
+    [UiScheduler]
+    public void HandleMessage(StatusMessage message)
+    {
+        Logger.ExtInfo(new { message.Status, Type = message.GetType().Name });
+        Application.Invoke(() =>
+        {
+            StatusLabel.Text = message.Status;
+            StatusBar.NeedsDraw = true;
+        });
+    }
+
+    [UiScheduler]
+    public void HandleMessage(TaskMessage message)
+    {
+        switch (message.Status)
+        {
+            case TaskStatus.Begin:
+                Add(TaskWindow);
+                TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
+                break;
+            case TaskStatus.Running:
+                TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
+                break;
+            case TaskStatus.End:
+                Remove(TaskWindow);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        Application.Invoke(() => NeedsDraw = true);
+    }
+
+    public override void OnLoaded()
+    {
+        MessageBus.Subscribe(this);
+        var messageHandlers = GetMessageHandlers();
+        foreach (var messageHandler in messageHandlers)
+        {
+            MessageBus.Subscribe(messageHandler);
+        }
+
+        base.OnLoaded();
     }
 
     private MenuBarv2 BuildMenuBar()
@@ -120,7 +158,7 @@ public class MainView<T> : Toplevel, IMainView,
         }
 
         tab.MouseEvent -= OnMouse;
-        
+
         MainTabView.RemoveTab(tab);
         if (tab.View is AbstractUiModule view)
         {
@@ -131,42 +169,13 @@ public class MainView<T> : Toplevel, IMainView,
         e.Handled = true;
     }
 
-    protected virtual AbstractMenuCommand[] GetMenuCommands() => [new QuitCommand(this)];
-    protected virtual IEnumerable<object> GetMessageHandlers() => [];
-    
-    [UiScheduler]
-    public void HandleMessage(StatusMessage message)
+    protected virtual AbstractMenuCommand[] GetMenuCommands()
     {
-        Logger.ExtInfo( new { message.Status, Type=message.GetType().Name });
-        Application.Invoke(() => {
-            StatusLabel.Text = message.Status;
-            StatusBar.NeedsDraw = true;
-        });
+        return [new QuitCommand(this)];
     }
 
-    [UiScheduler]
-    public void HandleMessage(TaskMessage message)
+    protected virtual IEnumerable<object> GetMessageHandlers()
     {
-        switch (message.Status)
-        {
-            case TaskStatus.Begin:
-                Add(TaskWindow);
-                TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
-                break;
-            case TaskStatus.Running:
-                TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
-                break;
-            case TaskStatus.End:
-                Remove(TaskWindow);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-        Application.Invoke(() => NeedsDraw = true);
-    }
-
-    public void HandleMessage(DisplayViewMessage message)
-    {
-        NewTab(message.Name, message.View);
+        return [];
     }
 }

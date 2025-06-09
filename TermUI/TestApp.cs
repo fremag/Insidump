@@ -1,11 +1,10 @@
 ﻿using Terminal.Gui.App;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 using TermUI.Modules;
 
 namespace TermUI;
-
-using Terminal.Gui.Views;
 
 public class TestApp : Toplevel
 {
@@ -42,12 +41,15 @@ public class TestApp : Toplevel
         Add(menu, TabView, StatusBar);
         var t = new Thread(Clock);
         t.Start();
-   }
-    
+    }
+
 
     private static void Clock(object? obj)
     {
-        while (Application.Top == null) Thread.Sleep(TimeSpan.FromSeconds(1));
+        while (Application.Top == null)
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+        }
 
         while (Application.Top.Running)
         {
@@ -101,12 +103,18 @@ public class TestApp : Toplevel
     private static void OnMouse(object? sender, MouseEventArgs e)
     {
         var tab = sender as Tab;
-        if (e.Flags != MouseFlags.Button2Clicked || tab is null) return;
+        if (e.Flags != MouseFlags.Button2Clicked || tab is null)
+        {
+            return;
+        }
 
         TabView.RemoveTab(tab);
-        if (tab.View is AbstractUiModule view) view.Close();
+        if (tab.View is AbstractUiModule view)
+        {
+            view.Close();
+        }
 
         Application.Invoke(() => { TabView.NeedsDraw = true; });
         e.Handled = true;
-    }    
+    }
 }

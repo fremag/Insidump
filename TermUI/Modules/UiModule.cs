@@ -5,13 +5,13 @@ namespace TermUI.Modules;
 
 public class UiModule<T> : AbstractUiModule where T : new()
 {
-    protected MessageBus MessageBus { get; }
-    public T Config { get; private set; } = new();
-
     protected UiModule(Logger logger, MessageBus messageBus) : base(logger)
     {
         MessageBus = messageBus;
     }
+
+    protected MessageBus MessageBus { get; }
+    public T Config { get; private set; } = new();
 
     public virtual void Init(T config)
     {

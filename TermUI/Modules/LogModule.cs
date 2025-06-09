@@ -3,7 +3,6 @@ using TermUI.Core.Messages;
 
 namespace TermUI.Modules;
 
-
 public class LogModuleConfig
 {
 }

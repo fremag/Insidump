@@ -21,9 +21,13 @@ public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<Dum
             .ToArray();
         return commands;
     }
-    
-    protected override IEnumerable<object> GetMessageHandlers() => [
-        new OpenDumpFileHandler(MainModel),
-        new DisplayClrTypeInfosHandler(MainModel)
-    ];
+
+    protected override IEnumerable<object> GetMessageHandlers()
+    {
+        return
+        [
+            new OpenDumpFileHandler(MainModel),
+            new DisplayClrTypeInfosHandler(MainModel)
+        ];
+    }
 }

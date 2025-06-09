@@ -6,7 +6,8 @@ namespace TermUI.Model;
 [PrimaryKey(nameof(Address))]
 public class ClrValueInfo
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]   
+    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public ulong Address { get; init; }
+
     public int ClrTypeId { get; init; }
 }

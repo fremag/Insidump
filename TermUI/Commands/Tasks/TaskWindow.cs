@@ -9,13 +9,11 @@ namespace TermUI.Commands.Tasks;
 
 public class TaskWindow : Window
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private readonly Button cancelButton;
+    private readonly Label label;
 
     private readonly ProgressBar progressBar;
-    private readonly Label label ;
-    private readonly Button cancelButton;
-    private CancellationTokenSource CancellationTokenSource { get; set; } = new ();
-    
+
     public TaskWindow()
     {
         AddCommand(Command.Cancel, CancelCommand);
@@ -26,32 +24,35 @@ public class TaskWindow : Window
         Height = 8;
         Modal = true;
         Title = "Task";
-            
-        progressBar = new()
+
+        progressBar = new ProgressBar
         {
             Width = Dim.Percent(90),
             Height = 1,
             X = Pos.Center(),
             Y = 3
         };
-            
-        cancelButton = new () 
+
+        cancelButton = new Button
         {
-            Text  = "Cancel",
+            Text = "Cancel",
             X = Pos.Center(),
             Y = 5
         };
         cancelButton.Accepting += Cancel;
-            
-        label = new()
+
+        label = new Label
         {
             X = 1,
             Y = 1
         };
-        
+
         Add(label, progressBar, cancelButton);
         cancelButton.SetFocus();
     }
+
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private CancellationTokenSource CancellationTokenSource { get; set; } = new();
 
     private void Cancel(object? sender, CommandEventArgs e)
     {

@@ -8,7 +8,7 @@ namespace TermUI.Core;
 
 public static class LogUtils
 {
-    public static void ExtInfo(this Logger logger, object? value1=null, object? value2 = null, object? value3 = null, object? value4= null, object? value5 = null, Exception? ex = null, [CallerMemberName] string caller = "")
+    public static void ExtInfo(this Logger logger, object? value1 = null, object? value2 = null, object? value3 = null, object? value4 = null, object? value5 = null, Exception? ex = null, [CallerMemberName] string caller = "")
     {
         if (!logger.IsInfoEnabled)
         {
@@ -16,7 +16,7 @@ public static class LogUtils
         }
 
         var sb = GetLogString(value1, value2, value3, value4, value5, ex);
-        
+
         logger.Info($"{caller}: {sb}");
     }
 
@@ -25,8 +25,8 @@ public static class LogUtils
         var sb = GetLogString(value1);
         return sb.ToString();
     }
-    
-    private static StringBuilder GetLogString(object? value1, object? value2 = null, object? value3 = null, object? value4= null, object? value5 = null, Exception? ex = null)
+
+    private static StringBuilder GetLogString(object? value1, object? value2 = null, object? value3 = null, object? value4 = null, object? value5 = null, Exception? ex = null)
     {
         StringBuilder sb = new();
         Append(value1, sb);
@@ -34,7 +34,7 @@ public static class LogUtils
         Append(value3, sb);
         Append(value4, sb);
         Append(value5, sb);
-        
+
         if (ex != null)
         {
             sb.Append($"{ex.GetType().Name}[{ex.Message}]");
@@ -43,7 +43,7 @@ public static class LogUtils
         return sb;
     }
 
-    private static void Append(object? obj, StringBuilder sb, string? prefix = null, bool scanProperties=true)
+    private static void Append(object? obj, StringBuilder sb, string? prefix = null, bool scanProperties = true)
     {
         if (prefix != null)
         {
@@ -57,7 +57,11 @@ public static class LogUtils
 
         if (obj == null)
         {
-            if (prefix != null) sb.Append(']');
+            if (prefix != null)
+            {
+                sb.Append(']');
+            }
+
             return;
         }
 
@@ -89,14 +93,15 @@ public static class LogUtils
         }
         else if (obj is IEnumerable enumerable)
         {
-            foreach(var element in enumerable) 
+            foreach (var element in enumerable)
             {
                 Append(element, sb, null, false);
                 sb.Append(',');
             }
+
             sb.Remove(sb.Length - 1, 1);
         }
-        else if(scanProperties)
+        else if (scanProperties)
         {
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
             foreach (var property in properties)
@@ -107,6 +112,9 @@ public static class LogUtils
             }
         }
 
-        if (prefix != null) sb.Append(']');
+        if (prefix != null)
+        {
+            sb.Append(']');
+        }
     }
 }

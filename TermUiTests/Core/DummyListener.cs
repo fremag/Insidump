@@ -3,9 +3,9 @@ using TermUI.Core.Messages;
 
 namespace TermUiTests.Core;
 
-internal class DummyListener : 
-    IMessageListener<BasicMessage<string>>, 
-    IMessageListener<BasicMessage<int>>, 
+internal class DummyListener :
+    IMessageListener<BasicMessage<string>>,
+    IMessageListener<BasicMessage<int>>,
     IMessageListener<BasicMessage<DateTime>>
 {
     internal List<string> StringMessages { get; } = new();
