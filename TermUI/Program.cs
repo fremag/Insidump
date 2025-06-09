@@ -1,6 +1,7 @@
 ﻿using Terminal.Gui.App;
 using Terminal.Gui.Input;
 using TermUI.Core;
+using TermUI.Core.Messages;
 using TermUI.Model;
 
 namespace TermUI;

@@ -3,18 +3,17 @@ using Terminal.Gui.App;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
-using TermUI.Commands;
-using TermUI.Commands.OpenDumpFile;
 using TermUI.Commands.Tasks;
-using TermUI.Core;
+using TermUI.Core.Messages;
+using TermUI.Modules;
 using TaskStatus = TermUI.Commands.Tasks.TaskStatus;
 
-namespace TermUI;
+namespace TermUI.Core.View;
 
 public interface IMainView
 {
     IMessageBus MessageBus { get; }
-    void NewTab(string name, View view);
+    void NewTab(string name, Terminal.Gui.ViewBase.View view);
     void Quit();
 }
 
@@ -71,7 +70,7 @@ public class MainView<T> : Toplevel, IMainView,
         base.OnLoaded();
     }
 
-    public void NewTab(string name, View view)
+    public void NewTab(string name, Terminal.Gui.ViewBase.View view)
     {
         Logger.ExtInfo(new{name, TabType=view.GetType().Name});
         Application.Invoke(() =>

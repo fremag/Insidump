@@ -2,7 +2,7 @@
 using NLog;
 using Terminal.Gui.App;
 
-namespace TermUI.Core;
+namespace TermUI.Core.Messages;
 
 public interface IMessageBus
 {

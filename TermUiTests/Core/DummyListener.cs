@@ -1,4 +1,5 @@
 ﻿using TermUI.Core;
+using TermUI.Core.Messages;
 
 namespace TermUiTests.Core;
 

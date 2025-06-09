@@ -2,7 +2,7 @@
 using NLog;
 using Terminal.Gui.ViewBase;
 
-namespace TermUI.Core;
+namespace TermUI.Modules;
 
 public abstract class AbstractUiModule(Logger logger) : View
 {

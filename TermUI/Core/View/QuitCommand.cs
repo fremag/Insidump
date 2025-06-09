@@ -1,6 +1,4 @@
-﻿using TermUI.Core;
-
-namespace TermUI.Commands;
+﻿namespace TermUI.Core.View;
 
 public class QuitCommand(IMainView mainView) : AbstractMenuCommand("_File", "_Quit", "Quit", mainView)
 {

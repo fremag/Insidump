@@ -1,4 +1,5 @@
 ﻿using TermUI.Core;
+using TermUI.Core.View;
 
 namespace TermUI.Commands.ClrTypeInfos;
 

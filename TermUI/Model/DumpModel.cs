@@ -7,6 +7,8 @@ using SQLitePCL;
 using TermUI.Commands;
 using TermUI.Commands.Tasks;
 using TermUI.Core;
+using TermUI.Core.Messages;
+using TermUI.Core.View;
 using TaskStatus = TermUI.Commands.Tasks.TaskStatus;
 
 namespace TermUI.Model;

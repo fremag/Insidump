@@ -1,5 +1,6 @@
 ﻿using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using TermUI.Core.View;
 using TermUI.Model;
 
 namespace TermUI.Commands.OpenDumpFile;

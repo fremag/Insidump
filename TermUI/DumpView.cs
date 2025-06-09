@@ -2,6 +2,8 @@
 using TermUI.Commands.ClrTypeInfos;
 using TermUI.Commands.OpenDumpFile;
 using TermUI.Core;
+using TermUI.Core.Messages;
+using TermUI.Core.View;
 using TermUI.Model;
 
 namespace TermUI;

@@ -1,4 +1,6 @@
-﻿namespace TermUI.Core;
+﻿using TermUI.Core.View;
+
+namespace TermUI.Core;
 
 public abstract class AbstractMenuCommand(string menu, string item, string helpText, IMainView mainView)
 {

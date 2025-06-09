@@ -1,4 +1,4 @@
-﻿using TermUI.Core;
+﻿using TermUI.Core.Messages;
 
 namespace TermUI.Commands.Tasks;
 

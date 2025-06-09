@@ -1,6 +1,7 @@
 ﻿using NLog;
+using TermUI.Core.Messages;
 
-namespace TermUI.Core;
+namespace TermUI.Modules;
 
 public class UiModule<T> : AbstractUiModule where T : new()
 {

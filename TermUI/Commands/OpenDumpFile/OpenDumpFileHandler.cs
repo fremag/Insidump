@@ -1,4 +1,6 @@
 ﻿using TermUI.Core;
+using TermUI.Core.Messages;
+using TermUI.Core.View;
 using TermUI.Model;
 
 namespace TermUI.Commands.OpenDumpFile;

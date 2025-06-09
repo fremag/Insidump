@@ -1,6 +1,6 @@
-﻿using TermUI.Core;
+﻿using TermUI.Core.Messages;
 
-namespace TermUI.Commands;
+namespace TermUI.Core.View;
 
 public class StatusMessage(string status) : IMessage
 {

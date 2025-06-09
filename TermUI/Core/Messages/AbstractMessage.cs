@@ -1,4 +1,4 @@
-﻿namespace TermUI.Core;
+﻿namespace TermUI.Core.Messages;
 
 public interface IMessage;
 

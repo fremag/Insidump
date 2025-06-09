@@ -1,8 +1,8 @@
 using Terminal.Gui.ViewBase;
 
-namespace TermUI.Commands;
+namespace TermUI.Core.View;
 
-public class ViewBase : View
+public class ViewBase : Terminal.Gui.ViewBase.View
 {
     protected ViewBase()
     {
