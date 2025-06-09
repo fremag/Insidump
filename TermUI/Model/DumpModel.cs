@@ -49,11 +49,12 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
     private WorkspaceDbContext? WorkspaceDb { get; set; }
     private Dictionary<string, ClrTypeInfo> ClrTypeInfos { get; set; } = new();
 
-    public void Dispose()
+    public override void Dispose()
     {
         Logger.ExtInfo("Db dispose...", new { });
         WorkspaceDb?.Dispose();
         Logger.ExtInfo("Done.");
+        base.Dispose();
     }
 
     public DumpInfo OpenDumpFile(string dumpFileName)

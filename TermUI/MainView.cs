@@ -36,10 +36,12 @@ public class MainView<T> : Toplevel, IMainView,
 
     private TabView MainTabView { get; } = new()
     {
+        Y = 1,
         Width = Dim.Fill(),
         Height = Dim.Fill(1),
         Enabled = true,
-        Y = 1
+        CanFocus = true,
+        Style = {ShowTopLine = true, ShowBorder = true, TabsOnBottom = false}
     };
 
     public IMessageBus MessageBus { get; }
@@ -72,18 +74,19 @@ public class MainView<T> : Toplevel, IMainView,
     public void NewTab(string name, View view)
     {
         Logger.ExtInfo(new{name, TabType=view.GetType().Name});
-        var newTab = new Tab
-        {
-            DisplayText = name,
-            View = view
-        };
-
-        newTab.MouseEvent += OnMouse;
         Application.Invoke(() =>
         {
+            var newTab = new Tab
+            {
+                DisplayText = name,
+                View = view 
+            };
+
+            newTab.MouseEvent += OnMouse;
             MainTabView.AddTab(newTab, true);
             MainTabView.NeedsDraw = true;
         });
+        
     }
 
     public void Quit()
