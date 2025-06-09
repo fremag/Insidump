@@ -7,6 +7,6 @@ namespace TermUI.Model;
 public class ClrValueInfo
 {
     [DatabaseGenerated(DatabaseGeneratedOption.None)]   
-    public ulong Address { get; set; }
-    public int ClrTypeId { get; set; }
+    public ulong Address { get; init; }
+    public int ClrTypeId { get; init; }
 }

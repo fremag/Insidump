@@ -1,6 +1,4 @@
 ﻿namespace TermUI.Core.Messages;
 
 [AttributeUsage(AttributeTargets.Method)]
-public class UiSchedulerAttribute : Attribute
-{
-}
+public class UiSchedulerAttribute : Attribute;

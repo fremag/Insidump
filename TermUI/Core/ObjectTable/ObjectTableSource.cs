@@ -15,7 +15,7 @@ public class ObjectTableSource<T> : ITableSource
 {
     public string[] ColumnNames { get; }
     public int Columns { get; }
-    public int Rows { get; set; }
+    public int Rows { get; private set; }
     private TableColumnAttribute[] Attributes { get; }
     
     private T[] Values { get; }
@@ -49,9 +49,17 @@ public class ObjectTableSource<T> : ITableSource
     public void SetFilter(string regex, string column)
     {
         var idx = ColumnNames.IndexOf(column);
-        var r = new Regex(regex, RegexOptions.IgnoreCase);
-        FilteredValues = Values
-            .Where( value => r.IsMatch(GetValue(value, idx) as string ?? string.Empty)).ToArray();
-        Rows = FilteredValues.Length;
+        try
+        {
+            var r = new Regex(regex, RegexOptions.IgnoreCase);
+            FilteredValues = Values
+                .Where(value => r.IsMatch(GetValue(value, idx) as string ?? string.Empty))
+                .ToArray();
+            Rows = FilteredValues.Length;
+        }
+        catch
+        {
+            // ignored
+        }
     }
 }

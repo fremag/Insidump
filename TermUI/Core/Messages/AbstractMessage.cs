@@ -2,12 +2,7 @@
 
 public interface IMessage;
 
-public class BasicMessage<T> : IMessage
+public class BasicMessage<T>(T value) : IMessage
 {
-    public T Value { get; }
-
-    public BasicMessage(T value)
-    {
-        Value = value;
-    }
+    public T Value { get; } = value;
 } 

@@ -7,13 +7,13 @@ namespace TermUI.Commands.ClrTypeInfos;
 public class TypeInfosView : ViewBase
 {
     private DumpModel DumpModel { get; }
-    private Dictionary<string, ClrTypeInfo> ClrTypeInfos;
     
     public TypeInfosView(DumpModel dumpModel)
     {
         DumpModel = dumpModel;
-        ClrTypeInfos = DumpModel.GetClrTypeInfos();
-        var clrTypeInfos = ClrTypeInfos.Values
+        var clrTypeInfos = DumpModel
+            .GetClrTypeInfos()
+            .Values
             .OrderByDescending(info => info.Nb)
             .ToArray();
         var objectTableSource = new ObjectTableSource<ClrTypeInfo>(clrTypeInfos); 

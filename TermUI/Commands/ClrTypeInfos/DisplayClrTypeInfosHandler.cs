@@ -13,7 +13,7 @@ public class DisplayClrTypeInfosHandler(DumpModel dumpModel) : IMessageListener<
     [Task]
     public void HandleMessage(DisplayClrTypeInfosMessage message)
     {
-        View typeInfosView = new TypeInfosView(dumpModel);
+        View typeInfosView = new TypeInfosView(DumpModel);
         DumpModel.MessageBus.SendMessage(new DisplayViewMessage { Name = "Types", View = typeInfosView });
     }
 }

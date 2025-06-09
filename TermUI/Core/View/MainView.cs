@@ -45,7 +45,7 @@ public class MainView<T> : Toplevel, IMainView,
 
     public IMessageBus MessageBus { get; }
     protected T MainModel { get; }
-    protected TaskWindow TaskWindow { get; }
+    private TaskWindow TaskWindow { get; }
     
     protected MainView(MessageBus messageBus, T mainModel, Logger logger)
     {
