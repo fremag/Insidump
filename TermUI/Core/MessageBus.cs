@@ -85,27 +85,32 @@ public class MessageBus : IMessageBus
 
             var subscriberType = subscriber.GetType();
             var map = subscriberType.GetInterfaceMap(interfaceType);
-            var hasSchedulerAttribute = false;
-            foreach (var methodInfo in map.TargetMethods)
-            {
-                var x = methodInfo.GetCustomAttributes<UiSchedulerAttribute>();
-                hasSchedulerAttribute = x.Any();
-            }
 
-            try
+            void Action()
             {
-                if (hasSchedulerAttribute)
-                {
-                    Application.Invoke(() => { sub.HandleMessage(message); });
-                }
-                else
+                try
                 {
                     sub.HandleMessage(message);
                 }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
-            catch (Exception e)
+
+            var hasSchedulerAttribute = map.TargetMethods.Any(info => info.GetCustomAttributes<UiSchedulerAttribute>().Any());
+            var threadAttribute = map.TargetMethods.Any(info => info.GetCustomAttributes<TaskAttribute>().Any());
+            if (hasSchedulerAttribute)
             {
-                Logger.Error(e);
+                Application.Invoke(Action);
+            }
+            else if (threadAttribute)
+            {
+                Task.Run(Action);
+            }
+            else
+            {
+                Action();
             }
         }
     }

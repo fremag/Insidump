@@ -7,11 +7,9 @@ public class DisplayClrTypeInfosHandler(DumpModel dumpModel) : IMessageListener<
 {
     private DumpModel DumpModel { get; } = dumpModel;
 
+    [Task]
     public void HandleMessage(DisplayClrTypeInfosMessage message)
     {
-        Task.Run(() =>
-        {
-            var infos = DumpModel.GetClrTypeInfos().Result;
-        });
+        var infos = DumpModel.GetClrTypeInfos();
     }
 }
