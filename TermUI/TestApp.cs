@@ -1,7 +1,6 @@
 ﻿using Terminal.Gui.App;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
-using TermUI.Core;
 using TermUI.Modules;
 
 namespace TermUI;

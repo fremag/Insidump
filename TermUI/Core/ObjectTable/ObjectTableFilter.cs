@@ -1,6 +1,5 @@
 ﻿using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
-using TermUI.Commands;
 using TermUI.Core.View;
 using TermUI.Model;
 

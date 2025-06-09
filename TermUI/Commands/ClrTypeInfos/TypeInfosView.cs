@@ -1,6 +1,4 @@
-﻿using System.Net.Mime;
-using TermUI.Core;
-using TermUI.Core.ObjectTable;
+﻿using TermUI.Core.ObjectTable;
 using TermUI.Core.View;
 using TermUI.Model;
 

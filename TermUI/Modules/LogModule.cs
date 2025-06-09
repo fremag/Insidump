@@ -1,5 +1,4 @@
 using NLog;
-using TermUI.Core;
 using TermUI.Core.Messages;
 
 namespace TermUI.Modules;

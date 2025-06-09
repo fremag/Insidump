@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using TermUI.Core;
 using TermUI.Core.ObjectTable;
 
 namespace TermUI.Model;

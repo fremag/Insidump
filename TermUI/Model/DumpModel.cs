@@ -4,7 +4,6 @@ using Microsoft.Diagnostics.Runtime.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using NLog;
 using SQLitePCL;
-using TermUI.Commands;
 using TermUI.Commands.Tasks;
 using TermUI.Core;
 using TermUI.Core.Messages;
