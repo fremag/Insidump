@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Terminal.Gui.ViewBase;
+﻿using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using TermUI.Core;
 using TermUI.Model;
@@ -42,29 +41,10 @@ public class TypeInfosView : ViewBase
             CanFocus = true,
             Enabled = true
         };
-        var clrTypeInfos = ClrTypeInfos.Values.ToArray();
+        var clrTypeInfos = ClrTypeInfos.Values
+            .OrderByDescending(info => info.Nb)
+            .ToArray();
         tableView.Table = new ObjectTableSource<ClrTypeInfo>(clrTypeInfos); 
         Add([tableView]);
-    }
-}
-
-public class ObjectTableSource<T> : ITableSource
-{
-    public string[] ColumnNames { get; }
-    public int Columns { get; }
-    public object this[int row, int col] => Getters[col]?.Invoke(Values[row], null) ?? string.Empty;
-    public int Rows { get; }
-
-    private T[] Values { get; }
-    private MethodInfo?[] Getters { get; }
-
-    public ObjectTableSource(T[] values)
-    {
-        Values = values.ToArray();
-        var properties = typeof(T).GetProperties();
-        Getters = properties.Select(p => p.GetGetMethod()).ToArray();
-        ColumnNames = properties.Select(p => p.Name).ToArray();
-        Columns = ColumnNames.Length;
-        Rows = Values.Length;
     }
 }

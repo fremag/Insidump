@@ -4,8 +4,3 @@
 public class UiSchedulerAttribute : Attribute
 {
 }
-
-[AttributeUsage(AttributeTargets.Method)]
-public class TaskAttribute : Attribute
-{
-}
