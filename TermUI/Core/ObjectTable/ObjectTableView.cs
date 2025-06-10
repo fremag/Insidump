@@ -1,4 +1,5 @@
 ﻿using Terminal.Gui.App;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
@@ -19,6 +20,16 @@ public class ObjectTableView<T> : TableView
         CanFocus = true;
         Enabled = true;
         Table = objectTableSource;
+        MouseEvent += OnMouseEvent;
+    }
+
+    private void OnMouseEvent(object? sender, MouseEventArgs e)
+    {
+        if( e.IsSingleClicked && ScreenToCell(e.Position, out var headerIfAny, out _) == null && headerIfAny.HasValue)
+        {
+            ObjectTableSource.Sort(headerIfAny.Value);
+            Application.Invoke(() => NeedsDraw = true);
+        }
     }
 
     private ObjectTableSource<T> ObjectTableSource { get; }

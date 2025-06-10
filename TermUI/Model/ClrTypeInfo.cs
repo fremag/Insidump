@@ -9,10 +9,12 @@ public class ClrTypeInfo
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public int Id { get; init; }
 
-    [TableColumn(Format = "{0,9:###,###,###}")]
+    [TableColumn(Format = "{0,9:###,###,###}", Sortable = true)]
     public int Nb { get; set; }
 
-    [MaxLength(1000)] [TableColumn] public string TypeName { get; init; } = string.Empty;
+    [MaxLength(1000)]
+    [TableColumn(Sortable = true)]
+    public string TypeName { get; init; } = string.Empty;
 
     public override string ToString()
     {

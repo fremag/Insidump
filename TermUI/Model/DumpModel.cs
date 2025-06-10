@@ -212,4 +212,19 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         ClrTypeInfos = WorkspaceDb!.ClrTypeInfos.ToDictionary(info => info.TypeName);
         return ClrTypeInfos;
     }
+    
+    public void Threads()
+    {
+        foreach (var clrThread in Runtime!.Threads)
+        {
+            ClrThread thread = (ClrThread)clrThread;
+            if (!thread.IsAlive)
+                continue;
+
+            foreach (ClrStackFrame frame in thread.EnumerateStackTrace())
+                Console.WriteLine($"    {frame.StackPointer:x12} {frame.InstructionPointer:x12} {frame}");
+
+            Console.WriteLine();
+        }        
+    }
 }
