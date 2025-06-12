@@ -1,6 +1,7 @@
 ﻿using NLog;
 using TermUI.Commands.ClrTypeInfos;
 using TermUI.Commands.OpenDumpFile;
+using TermUI.Commands.Threads;
 using TermUI.Core;
 using TermUI.Core.Messages;
 using TermUI.Core.View;
@@ -15,7 +16,8 @@ public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<Dum
         var commands = new AbstractMenuCommand[]
             {
                 new OpenDumpFileCommand(this),
-                new DisplayClrTypeInfosCommand(this)
+                new DisplayClrTypeInfosCommand(this),
+                new DisplayClrThreadInfosCommand(this)
             }
             .Concat(base.GetMenuCommands())
             .ToArray();
@@ -27,7 +29,8 @@ public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<Dum
         return
         [
             new OpenDumpFileHandler(MainModel),
-            new DisplayClrTypeInfosHandler(MainModel)
+            new DisplayClrTypeInfosHandler(MainModel),
+            new DisplayClrThreadInfosHandler(MainModel)       
         ];
     }
 }

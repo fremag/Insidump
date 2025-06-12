@@ -16,6 +16,8 @@ public class ClrTypeInfo
     [TableColumn(Sortable = true)]
     public string TypeName { get; init; } = string.Empty;
 
+    public ulong Address { get; set; }
+
     public override string ToString()
     {
         return $"{TypeName} ({Id}): {Nb:###,###,###,###,##0}";

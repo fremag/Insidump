@@ -18,13 +18,13 @@ public enum ColumnSort {None, Asc, Desc}
 public class ObjectTableSource<T> : ITableSource
 {
     private TableColumnAttribute[] Attributes { get; }
-    private T[] Values { get; }
-    private T[] DisplayValues { get; set; }
+    private T[] Values { get; set; }
+    public T[] DisplayValues { get; set; }
     private MethodInfo?[] Getters { get; }
     public string[] ColumnNames { get; private set; }
     private string[] RawColumnNames { get; }
     public int Columns { get; }
-    public int Rows { get; private set; }
+    public int Rows => DisplayValues.Length;
     private ColumnSort ColumnSort { get; set; }
     private int IndexColumnSort { get; set; }
     public string FilteredColumn { get; set; } = string.Empty;
@@ -48,7 +48,6 @@ public class ObjectTableSource<T> : ITableSource
         RawColumnNames = properties.Select(p => p.Name).ToArray();
         ColumnNames = RawColumnNames.ToArray();
         Columns = ColumnNames.Length;
-        Rows = Values.Length;
     }
 
     public object this[int row, int col] => string.Format(Attributes[col].Format, GetValue(row, col));
@@ -85,7 +84,6 @@ public class ObjectTableSource<T> : ITableSource
             DisplayValues = Values
                 .Where(value => r.IsMatch(GetValue(value, idx) as string ?? string.Empty))
                 .ToArray();
-            Rows = DisplayValues.Length;
         }
         catch
         {
@@ -139,5 +137,11 @@ public class ObjectTableSource<T> : ITableSource
                 break;
         }
         
+    }
+
+    public void Init(T[] values)
+    {
+        Values = values;
+        DisplayValues = values;
     }
 }

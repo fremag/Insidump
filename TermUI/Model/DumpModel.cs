@@ -1,4 +1,5 @@
-﻿using EFCore.BulkExtensions;
+﻿using System.Collections.Immutable;
+using EFCore.BulkExtensions;
 using Microsoft.Diagnostics.Runtime;
 using Microsoft.Diagnostics.Runtime.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -157,7 +158,8 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                     typeInfo = new ClrTypeInfo
                     {
                         Id = clrTypeInfos.Count,
-                        TypeName = typeName
+                        TypeName = typeName,
+                        Address = clrValue.Address
                     };
                     clrTypeInfos[typeName] = typeInfo;
                     Logger.ExtInfo("New type: ", typeInfo);
@@ -212,19 +214,42 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         ClrTypeInfos = WorkspaceDb!.ClrTypeInfos.ToDictionary(info => info.TypeName);
         return ClrTypeInfos;
     }
-    
-    public void Threads()
+
+    public ClrThreadInfo[] GetThreadInfos()
     {
-        foreach (var clrThread in Runtime!.Threads)
-        {
-            ClrThread thread = (ClrThread)clrThread;
-            if (!thread.IsAlive)
-                continue;
+        var threadClrValueInfos = GetClrValueInfos<Thread>()
+            .Select(obj => Runtime!.Heap.GetObject(obj.Address))
+            .ToDictionary(clrObj => clrObj.ReadField<int>("_managedThreadId"));
+        
+        var threadInfos = Runtime!.Threads
+            .Where(thread => thread.IsAlive)
+            .Select(thread => new ClrThreadInfo(thread, threadClrValueInfos.TryGetValue(thread.ManagedThreadId, out var threadClrValue) ? threadClrValue : null))
+            .ToArray();
+        
+        return threadInfos;
+    }
 
-            foreach (ClrStackFrame frame in thread.EnumerateStackTrace())
-                Console.WriteLine($"    {frame.StackPointer:x12} {frame.InstructionPointer:x12} {frame}");
+    private ClrValueInfo[] GetClrValueInfos<T>()
+    {
+        var threadTypeInfo = WorkspaceDb!.ClrTypeInfos.FirstOrDefault(info => info.TypeName == typeof(T).FullName);
+        var typeId = threadTypeInfo?.Id ?? -1;
+        var threadClrValueInfos = WorkspaceDb.ClrValueInfos.Where(info => info.ClrTypeId == typeId).ToArray();
+        return threadClrValueInfos;
+    }
 
-            Console.WriteLine();
-        }        
+    public IClrValue[] GetStackObjects(ClrThreadInfo clrThreadInfo)
+    {
+        var objAddresses = clrThreadInfo.GetStackObjects();
+        var clrObjects = GetClrObjects(objAddresses);
+        return clrObjects;
+    }
+
+    public IClrValue[] GetClrObjects(ulong[] objAddresses)
+    {
+        var clrObjects = objAddresses
+            .Select(address => Runtime!.Heap.GetObject(address))
+            .Where(obj => obj.IsValid)
+            .ToArray();
+        return clrObjects;
     }
 }
