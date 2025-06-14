@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using Microsoft.Diagnostics.Runtime.Interfaces;
-using Terminal.Gui.ViewBase;
+﻿using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using TermUI.Core.ObjectTable;
 using TermUI.Core.View;
@@ -82,6 +80,8 @@ public class ThreadView : ViewBase
         mainView.Tiles.First().ContentView?.Add(filter, tvThreads);
         mainView.Tiles.Last().ContentView?.Add(rightView);
         Add([mainView]);
+        tvThreads.SetFocus();
+        OnSelectedRowChanged(tvThreads, new SelectedCellChangedEventArgs(otsThreads, 0, 0, 0, 0));
     }
 
     private void OnSelectedRowChanged(object? sender, SelectedCellChangedEventArgs e)
@@ -102,72 +102,5 @@ public class ThreadView : ViewBase
         var clrObjectInfos = DumpModel.GetStackObjects(clrThreadInfo).Select(clrValue => new ClrObjectInfo(clrValue)).ToArray();
         otsStackObjects.Init(clrObjectInfos);
         tvStackObjects.NeedsDraw = true;
-    }
-}
-
-public class ClrObjectInfo(IClrValue clrValue)
-{
-    [TableColumn]
-    public string Address { get; } = $"{clrValue.Address:X}".PadLeft(16);
-    [TableColumn]
-    public string Type { get; } = clrValue.Type?.Name ?? "Unknown";
-    [TableColumn]
-    public string? Value { get; } = clrValue.Desc();
-    
-    public IClrValue ClrValue { get; } = clrValue;
-}
-
-public static class ClrValueHelper 
-{
-    private static Dictionary<string, MethodInfo> ReadBowMethods { get; }
-    
-    static ClrValueHelper()
-    {
-        var methInfo = typeof(IClrValue).GetMethod(nameof(IClrValue.ReadBoxedValue));
-        ReadBowMethods = new[] 
-        {
-            typeof(bool), typeof(char), typeof(byte), typeof(ushort), typeof(uint), typeof(ulong), typeof(UInt128), typeof(short), typeof(int), typeof(long), typeof(Int128), typeof(float), typeof(double)
-        }.ToDictionary(type => type.FullName ?? type.Name, type => methInfo!.MakeGenericMethod(type));
-        
-    }
-    public static string Desc(this IClrValue clrValue)
-    {
-        var clrValueType = clrValue.Type;
-        if (clrValueType is null)
-        {
-            return "Unknown";
-        }
-
-        if (clrValueType.IsArray)
-        {
-            var arr = clrValue.AsArray();
-            return $"[ {arr.Length} ]";
-        }
-
-        if (clrValueType.IsObjectReference)
-        {
-            return "()";
-        }
-
-        if (clrValueType.IsEnum)
-        {
-            var clrEnum = clrValueType.AsEnum();
-            
-            return clrEnum?.ToString() ?? "enum?";
-        }
-
-        if (clrValueType.IsString)
-        {
-            var str = clrValue.AsString();
-            return $"\"{str}\"";
-        }
-
-        if (clrValueType.IsPrimitive && ReadBowMethods.TryGetValue(clrValueType.Name ?? string.Empty, out var meth))
-        {
-            var value = meth.Invoke(clrValue, null);
-            return $"{value}";
-        }
-        
-        return "xxx";
     }
 }

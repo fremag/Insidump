@@ -1,4 +1,5 @@
 ﻿using NLog;
+using TermUI.Commands.ClrObjects;
 using TermUI.Commands.ClrTypeInfos;
 using TermUI.Commands.OpenDumpFile;
 using TermUI.Commands.Threads;
@@ -30,7 +31,8 @@ public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<Dum
         [
             new OpenDumpFileHandler(MainModel),
             new DisplayClrTypeInfosHandler(MainModel),
-            new DisplayClrThreadInfosHandler(MainModel)       
+            new DisplayClrThreadInfosHandler(MainModel),
+            new DisplayClrObjectsHandler(MainModel)
         ];
     }
 }

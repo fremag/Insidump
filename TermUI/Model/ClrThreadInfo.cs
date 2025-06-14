@@ -17,7 +17,7 @@ public class ClrThreadInfo(IClrThread thread, IClrValue? value)
     internal IClrThread Thread { get; } = thread;
     public IEnumerable<IClrStackFrame> ClrStackFrames(bool includeContext = false) => Thread.EnumerateStackTrace(includeContext);
 
-    public ulong[] GetStackObjects()
+    public ulong[] GetStackObjectAddresses()
     {
         var dataTarget = Thread.Runtime.DataTarget;
         
@@ -33,13 +33,13 @@ public class ClrThreadInfo(IClrThread thread, IClrValue? value)
         {
             // Read the value of this pointer.
             // If we fail to read memory: break.
-            // The  stack region should be in the crash dump.
+            // The stack region should be in the crash dump.
             if (!dataTarget.DataReader.ReadPointer(ptr, out ulong obj))
                 break;
             
             objs.Add(obj);
         }
 
-        return objs.ToArray();
+        return objs.Distinct().ToArray();
     }
 }

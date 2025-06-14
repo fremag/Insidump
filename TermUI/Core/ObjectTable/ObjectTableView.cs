@@ -17,6 +17,9 @@ public class ObjectTableView<T> : TableView
         Style.AlwaysShowHeaders = true;
         Style.ExpandLastColumn = true;
         Style.ShowHorizontalBottomline = true;
+        Style.ShowHorizontalScrollIndicators = true;
+        Style.SmoothHorizontalScrolling = true;
+        
         CanFocus = true;
         Enabled = true;
         Table = objectTableSource;

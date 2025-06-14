@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using EFCore.BulkExtensions;
+﻿using EFCore.BulkExtensions;
 using Microsoft.Diagnostics.Runtime;
 using Microsoft.Diagnostics.Runtime.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -220,12 +219,12 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         var threadClrValueInfos = GetClrValueInfos<Thread>()
             .Select(obj => Runtime!.Heap.GetObject(obj.Address))
             .ToDictionary(clrObj => clrObj.ReadField<int>("_managedThreadId"));
-        
+
         var threadInfos = Runtime!.Threads
             .Where(thread => thread.IsAlive)
             .Select(thread => new ClrThreadInfo(thread, threadClrValueInfos.TryGetValue(thread.ManagedThreadId, out var threadClrValue) ? threadClrValue : null))
             .ToArray();
-        
+
         return threadInfos;
     }
 
@@ -239,8 +238,17 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 
     public IClrValue[] GetStackObjects(ClrThreadInfo clrThreadInfo)
     {
-        var objAddresses = clrThreadInfo.GetStackObjects();
+        var objAddresses = clrThreadInfo.GetStackObjectAddresses();
         var clrObjects = GetClrObjects(objAddresses);
+        return clrObjects;
+    }
+
+    public IClrValue[] GetClrObjects(string typeName)
+    {
+        var clrTypeInfo = WorkspaceDb!.ClrTypeInfos.FirstOrDefault(info => info.TypeName == typeName);
+        var typeId = clrTypeInfo?.Id ?? -1;
+        var clrObjectAddresses = WorkspaceDb.ClrValueInfos.Where(info => info.ClrTypeId == typeId).Select(info => info.Address).ToArray();
+        var clrObjects = GetClrObjects(clrObjectAddresses);
         return clrObjects;
     }
 
@@ -251,5 +259,99 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             .Where(obj => obj.IsValid)
             .ToArray();
         return clrObjects;
+    }
+
+    public static IClrObjectInfoExt[] GetFields(IClrValue clrValue)
+    {
+        if (clrValue.Type == null)
+        {
+            return [];
+        }
+
+        if (clrValue.Type.IsArray)
+        {
+            var arr = clrValue.AsArray();
+            var arrType = arr.Type;
+            var elementType = arrType?.ComponentType?.ElementType;
+            var values = ReadArrayValues(arr);
+            
+            var elementValues = Enumerable.Range(0, arr.Length)
+                .Select(i =>
+                {
+                    var address = arrType?.GetArrayElementAddress(arr.Address, i) ?? 0;
+                    var value = values[i].ToString() ?? "_null_";
+                    
+                    return new ClrPrimitiveInfoExt($"#{i}", address.ToString("X"), elementType.ToString(), value);
+                })
+                .ToArray<IClrObjectInfoExt>();
+
+            return elementValues;
+        }
+
+        IClrObjectInfoExt[] fieldValues = clrValue.Type.Fields
+            .Where(field => field.Type != null)
+            .Select(field =>
+            {
+                var fieldName = GetFieldName(field);
+                var value = field.Type!.IsValueType ? clrValue.ReadValueTypeField(field.Name) : clrValue.ReadObjectField(field.Name);
+
+                return new ClrObjectInfoExt(fieldName, value);
+            })
+            .ToArray();
+        return fieldValues;
+    }
+
+    private static string GetFieldName(IClrInstanceField field)
+    {
+        if (field.Name is null)
+        {
+            return "Unknown";
+        }
+
+        const string backingFieldSuffix = ">k__BackingField";
+        if (field.Name.StartsWith('<') && field.Name.EndsWith(backingFieldSuffix))
+        {
+            var nameLength = field.Name.Length;
+            var suffixLength = backingFieldSuffix.Length;
+            var fieldName = field.Name.Substring(1, nameLength - suffixLength-1);
+            return fieldName;
+        }
+
+        return field.Name;
+    }
+
+    private static object[] ReadArrayValues(IClrArray array)
+    {
+        var elementType = array.Type.ComponentType.ElementType;
+
+        switch (elementType)
+        {
+            case ClrElementType.Boolean:
+                return array.ReadValues<bool>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.Char:
+                return array.ReadValues<char>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.Int8:
+                return array.ReadValues<byte>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.UInt8:
+                return array.ReadValues<sbyte>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.Int16:
+                return array.ReadValues<short>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.UInt16:
+                return array.ReadValues<ushort>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.Int32:
+                return array.ReadValues<int>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.UInt32:
+                return array.ReadValues<uint>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.Int64:
+                return array.ReadValues<long>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.UInt64:
+                return array.ReadValues<ulong>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.Float:
+                return array.ReadValues<float>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            case ClrElementType.Double:
+                return array.ReadValues<double>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+            default:
+                return Enumerable.Range(0, array.Length).Select(_ => '?').Cast<object>().ToArray();
+        }
     }
 }
