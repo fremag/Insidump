@@ -1,15 +1,19 @@
 ﻿using Insidump.Core.ObjectTable;
 using Microsoft.Diagnostics.Runtime.Interfaces;
+using Terminal.Gui.ViewBase;
 
 namespace Insidump.Model;
 
 public interface IClrObjectInfoExt
 {
     public string Name { get; }
-    [TableColumn]
+
+    [TableColumn(Alignment = Alignment.End, MaxWidth=16)]
     public string Address { get; }
-    [TableColumn]
+    
+    [TableColumn(MaxWidth = 50, Sortable = true)]
     public string Type { get; }
+
     [TableColumn]
     public string Value { get; }
 

@@ -13,7 +13,7 @@ public class ObjectTreeView<T> : ViewBase where T : class
     {
         TreeBuilder<T> tb = new DelegateTreeBuilder<T>(childGetter);
         var objectTableSource = new ObjectTableSource<T>(items);
-        var objectTableView = new ObjectTableView<T>(objectTableSource);
+        var objectTableView = new ObjectTableView<T>(objectTableSource, offset: 1);
         treeView = new TreeView<T>(tb)
         {
             CanFocus = true,

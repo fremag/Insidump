@@ -8,8 +8,8 @@ namespace Insidump.Model;
 public class ClrStackFrameInfo(IClrStackFrame frame)
 {
     private IClrStackFrame Frame { get; } = frame;
-    [TableColumn]
+    [TableColumn(MaxWidth = 50, Sortable = true)]
     public string? Type => Frame.Method == null ? Frame.FrameName : Frame.Method.Type.Name;
-    [TableColumn]
+    [TableColumn(MaxWidth = 20)]
     public string? Method => Frame.Method == null ? string.Empty : Frame.Method.Name;
 }

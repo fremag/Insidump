@@ -306,7 +306,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                     var address = arrType?.GetArrayElementAddress(arr.Address, i) ?? 0;
                     var value = values[i].ToString() ?? "_null_";
                     
-                    return new ClrPrimitiveInfoExt($"#{i}", $"{address:X}".PadLeft(16), type, value);
+                    return new ClrPrimitiveInfoExt($"#{i}", $"{address:X}", type, value);
                 })
                 .ToArray<IClrObjectInfoExt>();
 
@@ -349,7 +349,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
     private static object[] ReadArrayValues(IClrArray array)
     {
         var arrayLength = Math.Min(array.Length, 1_000_000);
-        if (arrayLength < 0)
+        if (arrayLength <= 0)
         {
             // wut ? 
             return [];

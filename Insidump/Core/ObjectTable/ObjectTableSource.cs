@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
 using Terminal.Gui.Drawing;
+using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Attribute = System.Attribute;
 
@@ -11,13 +12,16 @@ public class TableColumnAttribute : Attribute
 {
     public string Format { get; set; } = "{0}";
     public bool Sortable { get; set; } = false;
+    public Alignment Alignment { get; set; } = Alignment.Start;
+    public bool Visible { get; set; } = true;
+    public int MaxWidth { get; set; } = 100;
 }
 
 public enum ColumnSort {None, Asc, Desc}
 
 public class ObjectTableSource<T> : ITableSource
 {
-    private TableColumnAttribute[] Attributes { get; }
+    public TableColumnAttribute[] Attributes { get; }
     private T[] Values { get; set; }
     public T[] DisplayValues { get; set; }
     private MethodInfo?[] Getters { get; }
@@ -93,7 +97,7 @@ public class ObjectTableSource<T> : ITableSource
 
     public void Sort(int col)
     {
-        if (!Attributes[col].Sortable)
+        if (col < 0 || col >= Columns || !Attributes[col].Sortable)
         {
             return;
         }

@@ -5,6 +5,8 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <ApplicationIcon>Insidump_icon.ico</ApplicationIcon>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -30,7 +32,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Commands\" />
       <Folder Include="Modules\" />
     </ItemGroup>
 
