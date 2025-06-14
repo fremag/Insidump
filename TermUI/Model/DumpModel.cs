@@ -271,6 +271,11 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         if (clrValue.Type.IsArray)
         {
             var arr = clrValue.AsArray();
+            if (arr.Length < 0)
+            {
+                // wut ?
+                return [];
+            }
             var arrType = arr.Type;
             var elementType = arrType?.ComponentType?.ElementType;
             var type = elementType.ToString();
@@ -289,7 +294,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             }
             var values = ReadArrayValues(arr);
             
-            var elementValues = Enumerable.Range(0, arr.Length)
+            var elementValues = Enumerable.Range(0, values.Length)
                 .Select(i =>
                 {
                     var address = arrType?.GetArrayElementAddress(arr.Address, i) ?? 0;
@@ -336,36 +341,42 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 
     private static object[] ReadArrayValues(IClrArray array)
     {
+        var arrayLength = Math.Min(array.Length, 1_000_000);
+        if (arrayLength < 0)
+        {
+            // wut ? 
+            return [];
+        }
         var elementType = array.Type.ComponentType.ElementType;
 
         switch (elementType)
         {
             case ClrElementType.Boolean:
-                return array.ReadValues<bool>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<bool>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.Char:
-                return array.ReadValues<char>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<char>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.Int8:
-                return array.ReadValues<byte>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<byte>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.UInt8:
-                return array.ReadValues<sbyte>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<sbyte>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.Int16:
-                return array.ReadValues<short>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<short>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.UInt16:
-                return array.ReadValues<ushort>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<ushort>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.Int32:
-                return array.ReadValues<int>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<int>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.UInt32:
-                return array.ReadValues<uint>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<uint>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.Int64:
-                return array.ReadValues<long>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<long>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.UInt64:
-                return array.ReadValues<ulong>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<ulong>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.Float:
-                return array.ReadValues<float>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<float>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             case ClrElementType.Double:
-                return array.ReadValues<double>(0, array.Length)?.Cast<object>().ToArray() ?? [];
+                return array.ReadValues<double>(0, arrayLength)?.Cast<object>().ToArray() ?? [];
             default:
-                return Enumerable.Range(0, array.Length).Select(_ => '?').Cast<object>().ToArray();
+                return Enumerable.Range(0, arrayLength).Select(_ => '?').Cast<object>().ToArray();
         }
     }
 }

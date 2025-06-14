@@ -13,8 +13,7 @@ public class ThreadView : ViewBase
     private readonly ObjectTableSource<ClrThreadInfo> otsThreads;
     private readonly ObjectTableView<ClrStackFrameInfo> tvCallStackFrames;
     private readonly ObjectTableSource<ClrStackFrameInfo> otsCallStackFrames;
-    private readonly ObjectTableView<ClrObjectInfo> tvStackObjects;
-    private readonly ObjectTableSource<ClrObjectInfo> otsStackObjects;
+    private readonly ObjectTreeView<IClrObjectInfoExt> tvStackObjects;
     
     public ThreadView(DumpModel dumpModel)
     {
@@ -50,7 +49,7 @@ public class ThreadView : ViewBase
         };
         callStackView.Add(tvCallStackFrames);
         
-        var rightView = new TileView
+        var leftView = new TileView
         {
             Orientation = Orientation.Horizontal,
             Width = Dim.Fill(),
@@ -64,12 +63,11 @@ public class ThreadView : ViewBase
             Height = Dim.Fill()
         };
         
-        otsStackObjects = new ObjectTableSource<ClrObjectInfo>([]);
-        tvStackObjects = new ObjectTableView<ClrObjectInfo>(otsStackObjects);
+        tvStackObjects = new ObjectTreeView<IClrObjectInfoExt>([], render => render.Name, info => info.GetFields());
         stackView.Add(tvStackObjects);
 
-        rightView.Tiles.First().ContentView?.Add(callStackView);
-        rightView.Tiles.Last().ContentView?.Add(stackView);
+        leftView.Tiles.First().ContentView?.Add(filter, tvThreads);
+        leftView.Tiles.Last().ContentView?.Add(callStackView);
         
         var mainView = new TileView(2)
         {
@@ -77,8 +75,8 @@ public class ThreadView : ViewBase
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
-        mainView.Tiles.First().ContentView?.Add(filter, tvThreads);
-        mainView.Tiles.Last().ContentView?.Add(rightView);
+        mainView.Tiles.First().ContentView?.Add(leftView);
+        mainView.Tiles.Last().ContentView?.Add(stackView);
         Add([mainView]);
         tvThreads.SetFocus();
         OnSelectedRowChanged(tvThreads, new SelectedCellChangedEventArgs(otsThreads, 0, 0, 0, 0));
@@ -100,10 +98,10 @@ public class ThreadView : ViewBase
         tvCallStackFrames.NeedsDraw = true;
 
         var clrObjectInfos = DumpModel.GetStackObjects(clrThreadInfo)
-            .Select(clrValue => new ClrObjectInfo(clrValue))
+            .Select((clrValue, i) => new ClrObjectInfoExt($"#{i}", clrValue))
             .ToArray();
         
-        otsStackObjects.Init(clrObjectInfos);
+        tvStackObjects.Init(clrObjectInfos);
         tvStackObjects.NeedsDraw = true;
     }
 }

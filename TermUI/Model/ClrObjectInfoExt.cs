@@ -5,7 +5,6 @@ namespace TermUI.Model;
 
 public interface IClrObjectInfoExt
 {
-    [TableColumn]
     public string Name { get; }
     [TableColumn]
     public string Address { get; }

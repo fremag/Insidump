@@ -66,7 +66,7 @@ public static class ClrValueHelper
             
             if( enumValue is null)
             {
-                return "Unknown";
+                return "Null";
             }
 
             var enumNameValues = clrEnum
