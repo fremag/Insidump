@@ -89,6 +89,11 @@ public static class ClrValueHelper
             return $"{value}";
         }
         
+        if (clrValueType.IsValueType)
+        {
+            return "{...}";
+        }
+        
         return "xxx";
     }
 }

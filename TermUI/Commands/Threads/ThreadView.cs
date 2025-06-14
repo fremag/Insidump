@@ -99,7 +99,10 @@ public class ThreadView : ViewBase
         otsCallStackFrames.Init(frames);
         tvCallStackFrames.NeedsDraw = true;
 
-        var clrObjectInfos = DumpModel.GetStackObjects(clrThreadInfo).Select(clrValue => new ClrObjectInfo(clrValue)).ToArray();
+        var clrObjectInfos = DumpModel.GetStackObjects(clrThreadInfo)
+            .Select(clrValue => new ClrObjectInfo(clrValue))
+            .ToArray();
+        
         otsStackObjects.Init(clrObjectInfos);
         tvStackObjects.NeedsDraw = true;
     }

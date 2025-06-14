@@ -273,6 +273,20 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             var arr = clrValue.AsArray();
             var arrType = arr.Type;
             var elementType = arrType?.ComponentType?.ElementType;
+            var type = elementType.ToString();
+            
+            if (elementType == ClrElementType.Class)
+            {
+                var elementObjects = Enumerable.Range(0, arr.Length)
+                    .Select(i =>
+                    {
+                        var obj = arr.GetObjectValue(i);
+                        return new ClrObjectInfoExt($"#{i}", obj);
+                    })
+                    .ToArray<IClrObjectInfoExt>();
+
+                return elementObjects;
+            }
             var values = ReadArrayValues(arr);
             
             var elementValues = Enumerable.Range(0, arr.Length)
@@ -281,7 +295,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                     var address = arrType?.GetArrayElementAddress(arr.Address, i) ?? 0;
                     var value = values[i].ToString() ?? "_null_";
                     
-                    return new ClrPrimitiveInfoExt($"#{i}", address.ToString("X"), elementType.ToString(), value);
+                    return new ClrPrimitiveInfoExt($"#{i}", $"{address:X}".PadLeft(16), type, value);
                 })
                 .ToArray<IClrObjectInfoExt>();
 
