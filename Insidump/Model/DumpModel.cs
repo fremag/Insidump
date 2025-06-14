@@ -314,12 +314,12 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         }
 
         IClrObjectInfoExt[] fieldValues = clrValue.Type.Fields
-            .Where(field => field.Type != null)
+            .Where(field => field is { Type: not null, Name: not null })
             .Select(field =>
             {
                 var displayFieldName = GetDisplayFieldName(field);
                 var fieldName = field.Name;
-                var value = field.Type!.IsValueType ? clrValue.ReadValueTypeField(fieldName) : clrValue.ReadObjectField(fieldName);
+                var value = field.Type!.IsValueType ? clrValue.ReadValueTypeField(fieldName!) : clrValue.ReadObjectField(fieldName!);
 
                 return new ClrObjectInfoExt(displayFieldName, value);
             })

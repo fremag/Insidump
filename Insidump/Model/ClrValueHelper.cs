@@ -68,13 +68,24 @@ public static class ClrValueHelper
             {
                 return "Null";
             }
-
+            
+            // in C# an enum can have more than one name for a value! 
             var enumNameValues = clrEnum
                 .EnumerateValues()
                 .Where( tuple => tuple.Value != null)
-                .ToDictionary(tuple => tuple.Value!, tuple => tuple.Name);
-            
-            return enumNameValues.TryGetValue(enumValue, out var enumName) ? enumName : enumValue.ToString() ?? "Enum?";
+                .ToLookup(tuple => tuple.Value!, tuple => tuple.Name);
+
+            try
+            {
+                var enumNames = enumNameValues[enumValue];
+                var result = string.Join("|", enumNames);
+                return result;
+            }
+            catch
+            {
+                return $"Enum({enumValue})";
+            }
+
         }
 
         if (clrValueType.IsString)
