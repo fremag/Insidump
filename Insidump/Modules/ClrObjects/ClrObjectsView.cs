@@ -25,7 +25,7 @@ public class ClrObjectsView : ViewBase
             .Select((clrValue, i) => new ClrObjectInfoExt($"#{i}", clrValue))
             .ToArray<IClrObjectInfoExt>();
         
-        var otvClrObjectInfoExts = new ObjectTreeView<IClrObjectInfoExt>(clrObjectInfoExts, clrObjectInfoExt => $" {clrObjectInfoExt.Name}", clrObjectInfoExt => clrObjectInfoExt.GetFields());        
+        var otvClrObjectInfoExts = new ObjectTreeView<IClrObjectInfoExt>(clrObjectInfoExts, clrObjectInfoExt => clrObjectInfoExt.Name, clrObjectInfoExt => clrObjectInfoExt.GetFields());        
         
         Add(label, otvClrObjectInfoExts);
     }

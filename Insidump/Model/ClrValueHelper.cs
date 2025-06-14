@@ -23,7 +23,7 @@ public static class ClrValueHelper
         var clrValueType = clrValue.Type;
         if (clrValueType is null)
         {
-            return "Unknown";
+            return "-null-";
         }
 
         if (clrValueType.IsString)

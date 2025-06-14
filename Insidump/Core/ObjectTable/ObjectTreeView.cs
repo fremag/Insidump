@@ -17,7 +17,7 @@ public class ObjectTreeView<T> : ViewBase where T : class
         treeView = new TreeView<T>(tb)
         {
             CanFocus = true,
-            AspectGetter = aspectGetter,
+            AspectGetter = item => $" {aspectGetter(item)}",
             Style =
             {
                 ExpandableSymbol = new Rune('▷') , // unicode ▷ \u25B7 https://www.alt-codes.net/triangle-symbols
