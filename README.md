@@ -16,3 +16,5 @@ The goal is to open and analyze large dump files (~100 Go, it takes hours with M
 * Thread: calls + stack
 * Strings: show duplicated strings and memory wasted
 * Patterns: analyze how some instances are kept in memory and try to find memory leaks
+
+Why Insidump ? because it sounds like "Inside Dump" and [Inside Out](https://www.youtube.com/watch?v=mx2DsFOvXqw) from the Brecker Brothers.
