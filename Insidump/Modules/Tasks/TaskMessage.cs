@@ -6,7 +6,8 @@ public enum TaskStatus
 {
     Begin,
     Running,
-    End
+    End,
+    Failed
 }
 
 public class TaskMessage(TaskStatus status, string name, int progress, int max, CancellationTokenSource cancellationTokenSource) : IMessage

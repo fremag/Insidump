@@ -1,6 +1,8 @@
-﻿namespace Insidump.Core.View;
+﻿using Terminal.Gui.Input;
 
-public class QuitCommand(IMainView mainView) : AbstractMenuCommand("_File", "_Quit", "Quit", mainView)
+namespace Insidump.Core.View;
+
+public class QuitCommand(IMainView mainView) : AbstractMenuCommand("_File", "_Quit", "Quit", mainView, Key.Q)
 {
     public override void Action()
     {

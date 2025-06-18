@@ -9,14 +9,17 @@ namespace Insidump.Modules.Tasks;
 
 public class TaskWindow : Window
 {
-    private readonly Button cancelButton;
-    private readonly Label label;
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private CancellationTokenSource CancellationTokenSource { get; set; } = new();
 
+    private readonly Button cancelButton;
+    private readonly Button closeButton;
+    private readonly Label label;
     private readonly ProgressBar progressBar;
 
     public TaskWindow()
     {
-        AddCommand(Command.Cancel, CancelCommand);
+        Logger.ExtInfo($"Init.");
 
         X = Pos.Center();
         Y = Pos.Center();
@@ -30,7 +33,9 @@ public class TaskWindow : Window
             Width = Dim.Percent(90),
             Height = 1,
             X = Pos.Center(),
-            Y = 3
+            Y = 3,
+            ProgressBarFormat = ProgressBarFormat.SimplePlusPercentage,
+            BidirectionalMarquee = true
         };
 
         cancelButton = new Button
@@ -41,39 +46,66 @@ public class TaskWindow : Window
         };
         cancelButton.Accepting += Cancel;
 
+        closeButton = new Button
+        {
+            Text = "Close",
+            X = Pos.Left(cancelButton),
+            Y = 5,
+            Visible = false
+        };
+        closeButton.Accepting += Close;
+
         label = new Label
         {
             X = 1,
             Y = 1
         };
 
-        Add(label, progressBar, cancelButton);
+        Add(label, progressBar, cancelButton, closeButton);
         cancelButton.SetFocus();
     }
 
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private CancellationTokenSource CancellationTokenSource { get; set; } = new();
+    private void Close(object? sender, CommandEventArgs e)
+    {
+        Logger.ExtInfo($"Done.");
+        e.Handled = true;
+        Visible = false;
+    }
 
     private void Cancel(object? sender, CommandEventArgs e)
     {
-        Logger.ExtInfo("Cancel.");
+        Logger.ExtInfo("Done.");
         CancellationTokenSource.Cancel();
-    }
-
-    private bool? CancelCommand()
-    {
-        CancellationTokenSource.Cancel();
-        return true;
     }
 
     public void Update(string text, int progress, int max, CancellationTokenSource cancellationTokenSource)
     {
+        Logger.ExtInfo(new {text, progress, max, cancellationTokenSource.IsCancellationRequested });
         CancellationTokenSource = cancellationTokenSource;
         Application.Invoke(() =>
         {
             label.Text = text;
             progressBar.Fraction = (float)progress / max;
-            NeedsDraw = true;
+            progressBar.Visible = true;
+            cancelButton.Visible = true;
+            closeButton.Visible = false;
+            cancelButton.SetFocus();
+            Visible = true;
+        });
+    }
+
+    public void Stop(string text)
+    {
+        Logger.ExtInfo(new {text});
+        Application.Invoke(() =>
+        {
+            label.Text = text;
+            progressBar.Fraction = 0;
+            progressBar.Visible = false;
+            cancelButton.Visible = false;
+            closeButton.Visible = true;
+            closeButton.SetFocus();
+            Visible = true;
         });
     }
 }

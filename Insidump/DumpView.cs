@@ -18,6 +18,7 @@ public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<Dum
             {
                 new OpenDumpFileCommand(this),
                 new DisplayClrTypeInfosCommand(this),
+                new DisplayClrTypeInfosForceAnalyzeCommand(this),
                 new DisplayClrThreadInfosCommand(this)
             }
             .Concat(base.GetMenuCommands())

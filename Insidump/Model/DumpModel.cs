@@ -66,18 +66,28 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         var cancellationTokenSource = new CancellationTokenSource();
         var token = cancellationTokenSource.Token;
 
-        Progress(TaskStatus.Begin, dumpFileName, 0, 2, cancellationTokenSource);
-        dataTarget = DataTarget.LoadDump(DumpFilePath);
+        Progress(TaskStatus.Begin, $"Open {dumpFileName} ...", 0, 2, cancellationTokenSource);
+        try
+        {
+            dataTarget = DataTarget.LoadDump(DumpFilePath);
 
-        dataTarget.CacheOptions.CacheFields = true;
-        dataTarget.CacheOptions.CacheMethods = true;
-        dataTarget.CacheOptions.CacheTypes = true;
-        dataTarget.CacheOptions.UseOSMemoryFeatures = true;
-        dataTarget.CacheOptions.MaxDumpCacheSize = 10_000_000_000;
+            dataTarget.CacheOptions.CacheFields = true;
+            dataTarget.CacheOptions.CacheMethods = true;
+            dataTarget.CacheOptions.CacheTypes = true;
+            dataTarget.CacheOptions.UseOSMemoryFeatures = true;
+            dataTarget.CacheOptions.MaxDumpCacheSize = 10_000_000_000;
 
-        runtimeInfo = dataTarget.ClrVersions[0]; // just using the first runtime
-        Runtime = runtimeInfo.CreateRuntime();
-        Reader = dataTarget.DataReader;
+            runtimeInfo = dataTarget.ClrVersions[0]; // just using the first runtime
+            Runtime = runtimeInfo.CreateRuntime();
+            Reader = dataTarget.DataReader;
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e);
+            Status("Error: " + e.Message);
+            Progress(TaskStatus.Failed, $"Failed to open {dumpFileName} !", 2, 2, cancellationTokenSource);
+            return new DumpInfo();       
+        }
 
         if (!token.IsCancellationRequested)
         {
@@ -129,12 +139,13 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                     Logger.ExtInfo("Cancelled");
                     clrTypeInfos.Clear();
                     WorkspaceDb.Database.EnsureDeleted();
+                    Progress(TaskStatus.End, "Canceled.", nbSteps, nbSteps, cancellationTokenSource);
                     return clrTypeInfos;
                 }
 
-                if (++n % (64 * 1_024) == 0)
+                if (++n % (1_024) == 0)
                 {
-                    var msg = new { Segment = i, NbInstance = n }.ToLogString();
+                    var msg = new { Segment = $"{i} / {segments.Length}", SegmentSize=(segment.End-segment.Start), NbInstance = n }.ToLogString();
                     Progress(TaskStatus.Running, msg, i, nbSteps, cancellationTokenSource);
                     Logger.ExtInfo(msg);
                 }
@@ -182,7 +193,6 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             }
 
             Progress(TaskStatus.Running, "Analyze type infos...", i, nbSteps, cancellationTokenSource);
-            Thread.Sleep(1000);
         }
 
         Logger.ExtInfo("Save ClrValue infos...", new { NbClrValues = clrValueInfos.Count.ToString("###,###,###,###") });
@@ -203,10 +213,18 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         return WorkspaceDb!.ClrTypeInfos.First(info => info.Id == id);
     }
 
-    public Dictionary<string, ClrTypeInfo> GetClrTypeInfos()
+    public Dictionary<string, ClrTypeInfo> GetClrTypeInfos(bool forceAnalyze)
     {
-        if (!File.Exists(DbFilePath))
+        var dbFileInfo = new FileInfo(DbFilePath);
+        var dumpFileInfo = new FileInfo(DumpFilePath);
+
+        var dbFileExists = dbFileInfo.Exists;
+        var dbFileEmpty = dbFileExists && dbFileInfo.Length == 0;
+        var dbFileOlderThanDump = dumpFileInfo.Exists && dbFileInfo.Exists && dumpFileInfo.LastWriteTime > dbFileInfo.LastWriteTime;
+        
+        if (forceAnalyze || !dbFileExists || dbFileEmpty || dbFileOlderThanDump)
         {
+            Logger.ExtInfo($"Dump analysis needed...", new {forceAnalyze, dbFileExists, dbFileEmpty, dbFileOlderThanDump, Dump=dumpFileInfo.LastWriteTime, Database=dbFileInfo.LastWriteTime});
             ClrTypeInfos = Analyze();
         }
 

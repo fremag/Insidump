@@ -2,4 +2,7 @@
 
 namespace Insidump.Modules.ClrTypeInfos;
 
-public class DisplayClrTypeInfosMessage : IMessage;
+public class DisplayClrTypeInfosMessage(bool forceAnalyze) : IMessage
+{
+    public bool ForceAnalyze { get; } = forceAnalyze;
+}

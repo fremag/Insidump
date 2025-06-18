@@ -33,9 +33,12 @@ public class MainView<T> : Toplevel, IMainView,
         Logger = logger;
         StatusBar.Add(StatusLabel);
         MainMenuBar = BuildMenuBar();
-        Add(MainMenuBar, MainTabView, StatusBar);
-
+        
         TaskWindow = new TaskWindow();
+        TaskWindow.Visible = false;
+        TaskWindow.Arrangement = ViewArrangement.Overlapped | ViewArrangement.Movable;
+        
+        Add(MainMenuBar, MainTabView, StatusBar, TaskWindow);
     }
 
     private Logger Logger { get; }
@@ -100,23 +103,22 @@ public class MainView<T> : Toplevel, IMainView,
     [UiScheduler]
     public void HandleMessage(TaskMessage message)
     {
+        Logger.ExtInfo(message);
         switch (message.Status)
         {
             case TaskStatus.Begin:
-                Add(TaskWindow);
                 TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
                 break;
             case TaskStatus.Running:
                 TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
                 break;
             case TaskStatus.End:
-                Remove(TaskWindow);
+            case TaskStatus.Failed:
+                TaskWindow.Stop(message.Name);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
-
-        Application.Invoke(() => NeedsDraw = true);
     }
 
     public override void OnLoaded()
@@ -138,7 +140,7 @@ public class MainView<T> : Toplevel, IMainView,
         var menuBarItems = commands
             .GroupBy(command => command.Menu)
             .Select(group => new MenuBarItemv2(group.Key,
-                group.Select(command => new MenuItemv2(command.Item, command.HelpText, command.Action))))
+                group.Select(command => new MenuItemv2(command.Item, command.HelpText, command.Action, command.KeyShortcut))))
             .ToArray();
 
         var mainMenuBar = new MenuBarv2
