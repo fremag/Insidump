@@ -1,6 +1,8 @@
-﻿using Insidump.Core.Messages;
+﻿using System.Diagnostics;
+using Insidump.Core.Messages;
 using Insidump.Model;
 using Insidump.Modules.OpenDumpFile;
+using NLog;
 using Terminal.Gui.App;
 using Terminal.Gui.Input;
 
@@ -13,6 +15,9 @@ internal static class Program
         Application.Init();
         Application.QuitKey = Key.F10;
         MessageBus messageBus = new();
+        Trace.Listeners.Clear();
+        Trace.Listeners.Add(new NLog.NLogTraceListener { Name = "ClrMd", DefaultLogLevel = LogLevel.Trace});
+        Environment.SetEnvironmentVariable("ClrMD_TraceSymbolRequests", "true");
         using var mainModel = new DumpModel(messageBus);
         var app = new DumpView(messageBus, mainModel);
         if (args.Length > 0)

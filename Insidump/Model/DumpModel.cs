@@ -69,22 +69,30 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         Progress(TaskStatus.Begin, $"Open {dumpFileName} ...", 0, 2, cancellationTokenSource);
         try
         {
-            dataTarget = DataTarget.LoadDump(DumpFilePath);
+            var cacheOptions = new CacheOptions()
+            {
+                CacheFields = true,
+                CacheMethods = true,
+                CacheTypes = true,
+                UseOSMemoryFeatures = true,
+                MaxDumpCacheSize = 10_000_000_000
+            };
 
-            dataTarget.CacheOptions.CacheFields = true;
-            dataTarget.CacheOptions.CacheMethods = true;
-            dataTarget.CacheOptions.CacheTypes = true;
-            dataTarget.CacheOptions.UseOSMemoryFeatures = true;
-            dataTarget.CacheOptions.MaxDumpCacheSize = 10_000_000_000;
+            Logger.ExtInfo($"Loading dump...", new { DumpFilePath });
+            dataTarget = DataTarget.LoadDump(DumpFilePath, cacheOptions);
+            Logger.ExtInfo($"Dump loaded.", new { DumpFilePath });
 
             runtimeInfo = dataTarget.ClrVersions[0]; // just using the first runtime
+            Logger.ExtInfo($"Creating runTime...", new { runtimeInfo.Version, runtimeInfo.Flavor});
             Runtime = runtimeInfo.CreateRuntime();
+            Logger.ExtInfo($"RunTime created...", new {Runtime.ClrInfo.Version, Runtime.ClrInfo.Flavor});
             Reader = dataTarget.DataReader;
         }
         catch (Exception e)
         {
             Logger.Error(e);
             Status("Error: " + e.Message);
+            Logger.Error(e.StackTrace);
             Progress(TaskStatus.Failed, $"Failed to open {dumpFileName} !", 2, 2, cancellationTokenSource);
             return new DumpInfo();       
         }
