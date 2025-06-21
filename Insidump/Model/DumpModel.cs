@@ -117,12 +117,20 @@ public class DumpModel : MainModel
 
         Progress(TaskStatus.End, $"Loaded: {dumpFileName}", 2, 2, cancellationTokenSource);
         Status(token.IsCancellationRequested ? $"Canceled: {dumpFileName}" : dumpFileName);
+        var clrInfo = dataTarget!.ClrVersions.First();
+        
         return new DumpInfo
         {
-            Version = dataTarget!.ClrVersions.First().Version,
+            Version = clrInfo.Version,
+            Flavor = clrInfo.Flavor,
+            ModuleInfo = clrInfo.ModuleInfo,
             Architecture = dataTarget!.DataReader.Architecture,
             DisplayName = dataTarget!.DataReader.DisplayName,
-            TargetPlatform = dataTarget!.DataReader.TargetPlatform
+            TargetPlatform = dataTarget!.DataReader.TargetPlatform,
+            NbThreads = Runtime.Threads.Length,
+            NbSegments = Runtime!.Heap.Segments.Length,
+            Segments=Runtime!.Heap.Segments.Select(segment => (segment.End-segment.Start)/1_000_000).OrderByDescending(value => value).ToArray(),
+            NbModules = dataTarget.EnumerateModules().Count()            
         };
     }
 
@@ -192,7 +200,7 @@ public class DumpModel : MainModel
                     continue;
                 }
 
-                if (++n % BatchProgress == 0)
+                if (n++ % BatchProgress == 0)
                 {
                     var remains = segment.End - clrValue.Address; 
                     var delta = clrValue.Address - segment.Start;
