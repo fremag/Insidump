@@ -78,14 +78,14 @@ public class TaskWindow : Window
         CancellationTokenSource.Cancel();
     }
 
-    public void Update(string text, int progress, int max, CancellationTokenSource cancellationTokenSource)
+    public void Update(string text, float progress, float max, CancellationTokenSource cancellationTokenSource)
     {
         Logger.ExtInfo(new {text, progress, max, cancellationTokenSource.IsCancellationRequested });
         CancellationTokenSource = cancellationTokenSource;
         Application.Invoke(() =>
         {
             label.Text = text;
-            progressBar.Fraction = (float)progress / max;
+            progressBar.Fraction = progress / max;
             progressBar.Visible = true;
             cancelButton.Visible = true;
             closeButton.Visible = false;

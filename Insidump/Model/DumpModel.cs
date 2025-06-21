@@ -30,25 +30,40 @@ public class MainModel : IMainModel
         MessageBus.SendMessage(new StatusMessage(message));
     }
 
-    protected void Progress(TaskStatus status, string name, int progress, int max, CancellationTokenSource cancellationTokenSource)
+    protected void Progress(TaskStatus status, string name, float progress, float max, CancellationTokenSource cancellationTokenSource)
     {
         MessageBus.SendMessage(new TaskMessage(status, name, progress, max, cancellationTokenSource));
     }
 }
 
-public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
+public class DumpModel : MainModel
 {
     private DataTarget? dataTarget;
     private ClrInfo? runtimeInfo;
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static Logger DbLogger { get; } = LogManager.GetLogger("Sqlite");
 
     private static int BatchSize => 500_000;
+    private static int BatchProgress => 32*1_024;
+
     private string DumpFilePath { get; set; } = string.Empty;
-    private string DbFilePath { get; set; } = string.Empty;
     private IClrRuntime? Runtime { get; set; }
     private IDataReader? Reader { get; set; }
+
+    private string DbFilePath { get; set; } = string.Empty;
     private WorkspaceDbContext? WorkspaceDb { get; set; }
-    private Dictionary<string, ClrTypeInfo> ClrTypeInfos { get; set; } = new();
+    private DbContextOptionsBuilder<WorkspaceDbContext> GetOptionsBuilder()
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<WorkspaceDbContext>();
+        optionsBuilder.UseSqlite($"Data Source={DbFilePath}");
+        optionsBuilder.EnableSensitiveDataLogging();
+        optionsBuilder.LogTo(message => DbLogger.Log(LogLevel.Info, message));
+        return optionsBuilder;
+    }
+    
+    public DumpModel(MessageBus messageBus) : base(messageBus)
+    {
+    }
 
     public override void Dispose()
     {
@@ -62,14 +77,15 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
     {
         Logger.ExtInfo(new { dumpFileName });
         DumpFilePath = dumpFileName;
+        DbFilePath = Path.ChangeExtension(DumpFilePath, ".Sqlite");
+
         Status($"Loading: {dumpFileName} ...");
         var cancellationTokenSource = new CancellationTokenSource();
         var token = cancellationTokenSource.Token;
 
-        Progress(TaskStatus.Begin, $"Open {dumpFileName} ...", 0, 2, cancellationTokenSource);
         try
         {
-            var cacheOptions = new CacheOptions()
+            var cacheOptions = new CacheOptions
             {
                 CacheFields = true,
                 CacheMethods = true,
@@ -78,14 +94,16 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                 MaxDumpCacheSize = 10_000_000_000
             };
 
-            Logger.ExtInfo($"Loading dump...", new { DumpFilePath });
+            Progress(TaskStatus.Begin, $"Load: {dumpFileName} ...", 0, 2, cancellationTokenSource);
+            Logger.ExtInfo("Loading dump...", new { DumpFilePath });
             dataTarget = DataTarget.LoadDump(DumpFilePath, cacheOptions);
-            Logger.ExtInfo($"Dump loaded.", new { DumpFilePath });
+            Logger.ExtInfo("Dump loaded.", new { DumpFilePath });
 
+            Progress(TaskStatus.Begin, $"Create runtime: {dumpFileName} ...", 1, 2, cancellationTokenSource);
             runtimeInfo = dataTarget.ClrVersions[0]; // just using the first runtime
-            Logger.ExtInfo($"Creating runTime...", new { runtimeInfo.Version, runtimeInfo.Flavor});
+            Logger.ExtInfo("Creating runTime...", new { runtimeInfo.Version, runtimeInfo.Flavor });
             Runtime = runtimeInfo.CreateRuntime();
-            Logger.ExtInfo($"RunTime created...", new {Runtime.ClrInfo.Version, Runtime.ClrInfo.Flavor});
+            Logger.ExtInfo("RunTime created...", new { Runtime.ClrInfo.Version, Runtime.ClrInfo.Flavor });
             Reader = dataTarget.DataReader;
         }
         catch (Exception e)
@@ -94,21 +112,10 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             Status("Error: " + e.Message);
             Logger.Error(e.StackTrace);
             Progress(TaskStatus.Failed, $"Failed to open {dumpFileName} !", 2, 2, cancellationTokenSource);
-            return new DumpInfo();       
+            return new DumpInfo();
         }
 
-        if (!token.IsCancellationRequested)
-        {
-            Progress(TaskStatus.Running, "Open database...", 1, 2, cancellationTokenSource);
-            var optionsBuilder = new DbContextOptionsBuilder<WorkspaceDbContext>();
-            DbFilePath = Path.ChangeExtension(DumpFilePath, ".Sqlite");
-            optionsBuilder.UseSqlite($"Data Source={DbFilePath}");
-            optionsBuilder.EnableSensitiveDataLogging();
-
-            WorkspaceDb = new WorkspaceDbContext(optionsBuilder.Options);
-        }
-
-        Progress(TaskStatus.End, "Done.", 2, 2, cancellationTokenSource);
+        Progress(TaskStatus.End, $"Loaded: {dumpFileName}", 2, 2, cancellationTokenSource);
         Status(token.IsCancellationRequested ? $"Canceled: {dumpFileName}" : dumpFileName);
         return new DumpInfo
         {
@@ -119,21 +126,48 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         };
     }
 
-    private Dictionary<string, ClrTypeInfo> Analyze()
+    private void InitializeDb()
+    {
+        var dbFileInfo = new FileInfo(DbFilePath);
+        var dumpFileInfo = new FileInfo(DumpFilePath);
+
+        var dbFileExists = dbFileInfo.Exists;
+        var dbFileEmpty = dbFileExists && dbFileInfo.Length == 0;
+        var dbFileOlderThanDump = dumpFileInfo.Exists && dbFileInfo.Exists && dumpFileInfo.LastWriteTime > dbFileInfo.LastWriteTime;
+
+        if (dbFileExists && !dbFileEmpty && !dbFileOlderThanDump)
+        {
+            Logger.ExtInfo("Open Sqlite database...", new {dbFileExists, dbFileEmpty, dbFileOlderThanDump, Dump=dumpFileInfo.LastWriteTime, Database=dbFileInfo.LastWriteTime});
+            WorkspaceDb = new WorkspaceDbContext(GetOptionsBuilder().Options);
+            Logger.ExtInfo("Sqlite database opened.", new {dbFileExists, dbFileEmpty, dbFileOlderThanDump, Dump=dumpFileInfo.LastWriteTime, Database=dbFileInfo.LastWriteTime});
+            return;
+        }
+
+        Logger.ExtInfo("Dump analysis needed...", new {dbFileExists, dbFileEmpty, dbFileOlderThanDump, Dump=dumpFileInfo.LastWriteTime, Database=dbFileInfo.LastWriteTime});
+        WorkspaceDb = Analyze();
+        Logger.ExtInfo("Dump analysis done.", new {dbFileExists, dbFileEmpty, dbFileOlderThanDump, Dump=dumpFileInfo.LastWriteTime, Database=dbFileInfo.LastWriteTime});
+    }
+
+    public WorkspaceDbContext? Analyze()
     {
         var cancellationTokenSource = new CancellationTokenSource();
         var cancelToken = cancellationTokenSource.Token;
+        
+        var workspaceDb = new WorkspaceDbContext(GetOptionsBuilder().Options);
+        workspaceDb.Database.EnsureDeleted();
+        workspaceDb.Database.EnsureCreated();
+
         Status("Analyze type infos...");
-        WorkspaceDb!.Database.EnsureDeleted();
-        WorkspaceDb.Database.EnsureCreated();
-        var segments = Runtime!.Heap.Segments;
+        var segments = Runtime!.Heap.Segments
+            .OrderBy(segment => segment.End-segment.Start)
+            .ToArray();
+        Logger.ExtInfo("Segments", new { Count = segments.Length });
         var nbSteps = segments.Length + 1;
 
         Progress(TaskStatus.Begin, "Analyze type infos...", 0, nbSteps, cancellationTokenSource);
         Batteries.Init();
 
-        var clrTypeInfos = new Dictionary<string, ClrTypeInfo>();
-        clrTypeInfos.EnsureCapacity(1_024);
+        var clrTypeInfos = new Dictionary<string, ClrTypeInfo>(1024);
         var clrValueInfos = new List<ClrValueInfo>(1_000_000);
         var n = 0;
 
@@ -146,16 +180,10 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                 {
                     Logger.ExtInfo("Cancelled");
                     clrTypeInfos.Clear();
-                    WorkspaceDb.Database.EnsureDeleted();
+                    workspaceDb.Database.EnsureDeleted();
+                    workspaceDb.Dispose();
                     Progress(TaskStatus.End, "Canceled.", nbSteps, nbSteps, cancellationTokenSource);
-                    return clrTypeInfos;
-                }
-
-                if (++n % (1_024) == 0)
-                {
-                    var msg = new { Segment = $"{i} / {segments.Length}", SegmentSize=(segment.End-segment.Start), NbInstance = n }.ToLogString();
-                    Progress(TaskStatus.Running, msg, i, nbSteps, cancellationTokenSource);
-                    Logger.ExtInfo(msg);
+                    return null;
                 }
 
                 var isNull = clrValue.IsNull;
@@ -164,6 +192,17 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                     continue;
                 }
 
+                if (++n % BatchProgress == 0)
+                {
+                    var remains = segment.End - clrValue.Address; 
+                    var delta = clrValue.Address - segment.Start;
+                    var total = segment.End - segment.Start;
+                    var percent = (delta / (float)total) ;
+                    var msg = new { Segment = $"{i+1} / {segments.Length}", Size=$"{total/1_000_000:###,###,###,##0} Mo", Remains= $"{remains/1_000_000:###,##0} Mo", NbInstances = n.ToString("###,###,###,##0"), NbTypes=$"{clrTypeInfos.Count:###,###,##0}" }.ToLogString();
+                    Progress(TaskStatus.Running, msg, i+percent, nbSteps, cancellationTokenSource);
+                    Logger.ExtInfo(msg);
+                }
+                
                 var type = clrValue.Type;
                 var typeName = type?.Name;
                 if (typeName == null)
@@ -194,50 +233,74 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                 if (clrValueInfos.Count > BatchSize)
                 {
                     Logger.ExtInfo("Save ClrValue infos...", new { NbClrValues = clrValueInfos.Count.ToString("###,###,###,###") });
-                    WorkspaceDb.BulkInsert(clrValueInfos);
+                    workspaceDb.BulkInsert(clrValueInfos);
                     Logger.ExtInfo("Saved", new { DbFilePath, DbSize = (new FileInfo(DbFilePath).Length / 1_000_000).ToString("###,###,###,### Mo") });
                     clrValueInfos.Clear();
                 }
             }
 
-            Progress(TaskStatus.Running, "Analyze type infos...", i, nbSteps, cancellationTokenSource);
+            Progress(TaskStatus.Running, "Analyze type infos...", i+1, nbSteps, cancellationTokenSource);
         }
 
         Logger.ExtInfo("Save ClrValue infos...", new { NbClrValues = clrValueInfos.Count.ToString("###,###,###,###") });
-        WorkspaceDb!.BulkInsert(clrValueInfos);
+        workspaceDb.BulkInsert(clrValueInfos);
         var values = clrTypeInfos.Values.ToArray();
         Logger.ExtInfo("Save ClrType infos...", new { NbTypenfos = values.Length });
-        WorkspaceDb.AddRange(values);
+        workspaceDb.BulkInsert(values);
         Progress(TaskStatus.Running, "Save type infos...", nbSteps, nbSteps, cancellationTokenSource);
-        WorkspaceDb.SaveChanges();
+        workspaceDb.SaveChanges();
         Logger.ExtInfo("Saved", new { DbFilePath, DbSize = (new FileInfo(DbFilePath).Length / 1_000_000).ToString("###,###,###,### Mo") });
-        Progress(TaskStatus.End, "Done.", nbSteps, nbSteps, cancellationTokenSource);
+        Progress(TaskStatus.End, "Analyze done.", nbSteps, nbSteps, cancellationTokenSource);
         Status("Types Analyzed.");
-        return clrTypeInfos;
+        return workspaceDb;
     }
 
     public ClrTypeInfo GetClrTypeInfo(int id)
     {
+        if (WorkspaceDb == null)
+        {
+            InitializeDb();
+        }
+
         return WorkspaceDb!.ClrTypeInfos.First(info => info.Id == id);
     }
 
-    public Dictionary<string, ClrTypeInfo> GetClrTypeInfos(bool forceAnalyze)
+    public Dictionary<string, ClrTypeInfo> GetClrTypeInfos()
     {
-        var dbFileInfo = new FileInfo(DbFilePath);
-        var dumpFileInfo = new FileInfo(DumpFilePath);
-
-        var dbFileExists = dbFileInfo.Exists;
-        var dbFileEmpty = dbFileExists && dbFileInfo.Length == 0;
-        var dbFileOlderThanDump = dumpFileInfo.Exists && dbFileInfo.Exists && dumpFileInfo.LastWriteTime > dbFileInfo.LastWriteTime;
-        
-        if (forceAnalyze || !dbFileExists || dbFileEmpty || dbFileOlderThanDump)
+        if (WorkspaceDb == null)
         {
-            Logger.ExtInfo($"Dump analysis needed...", new {forceAnalyze, dbFileExists, dbFileEmpty, dbFileOlderThanDump, Dump=dumpFileInfo.LastWriteTime, Database=dbFileInfo.LastWriteTime});
-            ClrTypeInfos = Analyze();
+            InitializeDb();
         }
 
-        ClrTypeInfos = WorkspaceDb!.ClrTypeInfos.ToDictionary(info => info.TypeName);
-        return ClrTypeInfos;
+        var clrTypeInfos = WorkspaceDb!.ClrTypeInfos.ToDictionary(info => info.TypeName);
+        return clrTypeInfos;
+    }
+
+    private ClrValueInfo[] GetClrValueInfos<T>()
+    {
+        if (WorkspaceDb == null)
+        {
+            InitializeDb();
+        }
+
+        var threadTypeInfo = WorkspaceDb!.ClrTypeInfos.FirstOrDefault(info => info.TypeName == typeof(T).FullName);
+        var typeId = threadTypeInfo?.Id ?? -1;
+        var threadClrValueInfos = WorkspaceDb.ClrValueInfos.Where(info => info.ClrTypeId == typeId).ToArray();
+        return threadClrValueInfos;
+    }
+
+    public IClrValue[] GetClrObjects(string typeName)
+    {
+        if (WorkspaceDb == null)
+        {
+            InitializeDb();
+        }
+
+        var clrTypeInfo = WorkspaceDb!.ClrTypeInfos.FirstOrDefault(info => info.TypeName == typeName);
+        var typeId = clrTypeInfo?.Id ?? -1;
+        var clrObjectAddresses = WorkspaceDb.ClrValueInfos.Where(info => info.ClrTypeId == typeId).Select(info => info.Address).ToArray();
+        var clrObjects = GetClrObjects(clrObjectAddresses);
+        return clrObjects;
     }
 
     public ClrThreadInfo[] GetThreadInfos()
@@ -254,27 +317,10 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         return threadInfos;
     }
 
-    private ClrValueInfo[] GetClrValueInfos<T>()
-    {
-        var threadTypeInfo = WorkspaceDb!.ClrTypeInfos.FirstOrDefault(info => info.TypeName == typeof(T).FullName);
-        var typeId = threadTypeInfo?.Id ?? -1;
-        var threadClrValueInfos = WorkspaceDb.ClrValueInfos.Where(info => info.ClrTypeId == typeId).ToArray();
-        return threadClrValueInfos;
-    }
-
     public IClrValue[] GetStackObjects(ClrThreadInfo clrThreadInfo)
     {
         var objAddresses = clrThreadInfo.GetStackObjectAddresses();
         var clrObjects = GetClrObjects(objAddresses);
-        return clrObjects;
-    }
-
-    public IClrValue[] GetClrObjects(string typeName)
-    {
-        var clrTypeInfo = WorkspaceDb!.ClrTypeInfos.FirstOrDefault(info => info.TypeName == typeName);
-        var typeId = clrTypeInfo?.Id ?? -1;
-        var clrObjectAddresses = WorkspaceDb.ClrValueInfos.Where(info => info.ClrTypeId == typeId).Select(info => info.Address).ToArray();
-        var clrObjects = GetClrObjects(clrObjectAddresses);
         return clrObjects;
     }
 
@@ -302,16 +348,17 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                 // wut ?
                 return [];
             }
+
             var arrType = arr.Type;
             var elementType = arrType.ComponentType?.ElementType;
-            if(elementType == null)
+            if (elementType == null)
             {
                 // wut ?
                 return [];
             }
 
             var type = elementType.Value.ToString();
-            
+
             if (elementType == ClrElementType.Class)
             {
                 var elementObjects = Enumerable.Range(0, arr.Length)
@@ -324,14 +371,15 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 
                 return elementObjects;
             }
+
             var values = ReadArrayValues(arr);
-            
+
             var elementValues = Enumerable.Range(0, values.Length)
                 .Select(i =>
                 {
                     var address = arrType?.GetArrayElementAddress(arr.Address, i) ?? 0;
                     var value = values[i].ToString() ?? "_null_";
-                    
+
                     return new ClrPrimitiveInfoExt($"#{i}", $"{address:X}", type, value);
                 })
                 .ToArray<IClrObjectInfoExt>();
@@ -365,7 +413,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         {
             var nameLength = field.Name.Length;
             var suffixLength = backingFieldSuffix.Length;
-            var fieldName = field.Name.Substring(1, nameLength - suffixLength-1);
+            var fieldName = field.Name.Substring(1, nameLength - suffixLength - 1);
             return fieldName;
         }
 
@@ -380,11 +428,13 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             // wut ? 
             return [];
         }
+
         var elementType = array.Type?.ComponentType?.ElementType;
         if (elementType == null)
         {
             return [];
         }
+
         switch (elementType)
         {
             case ClrElementType.Boolean:

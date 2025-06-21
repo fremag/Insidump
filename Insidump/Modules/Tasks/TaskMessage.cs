@@ -10,11 +10,11 @@ public enum TaskStatus
     Failed
 }
 
-public class TaskMessage(TaskStatus status, string name, int progress, int max, CancellationTokenSource cancellationTokenSource) : IMessage
+public class TaskMessage(TaskStatus status, string name, float progress, float max, CancellationTokenSource cancellationTokenSource) : IMessage
 {
     public TaskStatus Status { get; } = status;
     public string Name { get; } = name;
     public CancellationTokenSource CancellationTokenSource { get; } = cancellationTokenSource;
-    public int Progress { get; } = progress;
-    public int Max { get; } = max;
+    public float Progress { get; } = progress;
+    public float Max { get; } = max;
 }

@@ -13,11 +13,11 @@ public class TypeInfosView : ViewBase
     private ObjectTableSource<ClrTypeInfo> objectTableSource;
     private ObjectTableView<ClrTypeInfo> tableView;
     
-    public TypeInfosView(DumpModel dumpModel, bool forceAnalyze)
+    public TypeInfosView(DumpModel dumpModel)
     {
         DumpModel = dumpModel;
         var clrTypeInfos = DumpModel
-            .GetClrTypeInfos(forceAnalyze)
+            .GetClrTypeInfos()
             .Values
             .OrderByDescending(info => info.Nb)
             .ToArray();

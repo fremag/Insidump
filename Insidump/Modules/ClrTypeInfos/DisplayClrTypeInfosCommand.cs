@@ -8,14 +8,14 @@ public class DisplayClrTypeInfosCommand(IMainView mainView) : AbstractMenuComman
 {
     public override void Action()
     {
-        MainView.MessageBus.SendMessage(new DisplayClrTypeInfosMessage(false));
+        MainView.MessageBus.SendMessage(new DisplayClrTypeInfosMessage());
     }
 }
 
-public class DisplayClrTypeInfosForceAnalyzeCommand(IMainView mainView) : AbstractMenuCommand("_File", "Analyze...", "Display types infos", mainView, Key.A)
+public class AnalyzeCommand(IMainView mainView) : AbstractMenuCommand("_File", "Analyze...", "Analyze Dump file", mainView, Key.A)
 {
     public override void Action()
     {
-        MainView.MessageBus.SendMessage(new DisplayClrTypeInfosMessage(true));
+        MainView.MessageBus.SendMessage(new AnalyzeMessage());
     }
 }
