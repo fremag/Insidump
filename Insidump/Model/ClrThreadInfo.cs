@@ -14,7 +14,7 @@ public class ClrThreadInfo(IClrThread thread, IClrValue? value)
     [TableColumn(Sortable = true)]
     public string Name { get; } = value?.ReadStringField("_name") ?? "Unknown";
 
-    internal IClrThread Thread { get; } = thread;
+    private IClrThread Thread { get; } = thread;
     public IEnumerable<IClrStackFrame> ClrStackFrames(bool includeContext = false) => Thread.EnumerateStackTrace(includeContext);
 
     public ulong[] GetStackObjectAddresses()

@@ -4,7 +4,7 @@ using Terminal.Gui.Input;
 
 namespace Insidump.Modules.Threads;
 
-public class DisplayClrThreadInfosCommand(IMainView mainView) : AbstractMenuCommand("_File", "Threads...", "Display thread infos", mainView, Key.H)
+public class DisplayClrThreadInfosCommand(IMainView mainView) : AbstractMenuCommand("_File", "Threads...", "Display thread infos", mainView, Key.H.WithCtrl)
 {
     public override void Action()
     {

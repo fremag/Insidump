@@ -1,8 +1,6 @@
 ﻿using EFCore.BulkExtensions;
 using Insidump.Core;
 using Insidump.Core.Messages;
-using Insidump.Core.View;
-using Insidump.Modules.Tasks;
 using Microsoft.Diagnostics.Runtime;
 using Microsoft.Diagnostics.Runtime.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -12,31 +10,7 @@ using TaskStatus = Insidump.Modules.Tasks.TaskStatus;
 
 namespace Insidump.Model;
 
-public class MainModel : IMainModel
-{
-    protected MainModel(MessageBus messageBus)
-    {
-        MessageBus = messageBus;
-    }
-
-    public MessageBus MessageBus { get; }
-
-    public virtual void Dispose()
-    {
-    }
-
-    protected void Status(string message)
-    {
-        MessageBus.SendMessage(new StatusMessage(message));
-    }
-
-    protected void Progress(TaskStatus status, string name, float progress, float max, CancellationTokenSource cancellationTokenSource)
-    {
-        MessageBus.SendMessage(new TaskMessage(status, name, progress, max, cancellationTokenSource));
-    }
-}
-
-public class DumpModel : MainModel
+public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 {
     private DataTarget? dataTarget;
     private ClrInfo? runtimeInfo;
@@ -48,10 +22,10 @@ public class DumpModel : MainModel
 
     private string DumpFilePath { get; set; } = string.Empty;
     private IClrRuntime? Runtime { get; set; }
-    private IDataReader? Reader { get; set; }
 
     private string DbFilePath { get; set; } = string.Empty;
     private WorkspaceDbContext? WorkspaceDb { get; set; }
+    
     private DbContextOptionsBuilder<WorkspaceDbContext> GetOptionsBuilder()
     {
         var optionsBuilder = new DbContextOptionsBuilder<WorkspaceDbContext>();
@@ -59,10 +33,6 @@ public class DumpModel : MainModel
         optionsBuilder.EnableSensitiveDataLogging();
         optionsBuilder.LogTo(message => DbLogger.Log(LogLevel.Info, message));
         return optionsBuilder;
-    }
-    
-    public DumpModel(MessageBus messageBus) : base(messageBus)
-    {
     }
 
     public override void Dispose()
@@ -83,6 +53,7 @@ public class DumpModel : MainModel
         var cancellationTokenSource = new CancellationTokenSource();
         var token = cancellationTokenSource.Token;
 
+        var title = "Loading dump";
         try
         {
             var cacheOptions = new CacheOptions
@@ -94,31 +65,29 @@ public class DumpModel : MainModel
                 MaxDumpCacheSize = 10_000_000_000
             };
 
-            Progress(TaskStatus.Begin, $"Load: {dumpFileName} ...", 0, 2, cancellationTokenSource);
+            Progress(TaskStatus.Begin, title, $"Load: {dumpFileName} ...", 0, 2, cancellationTokenSource);
             Logger.ExtInfo("Loading dump...", new { DumpFilePath });
             dataTarget = DataTarget.LoadDump(DumpFilePath, cacheOptions);
             Logger.ExtInfo("Dump loaded.", new { DumpFilePath });
 
-            Progress(TaskStatus.Begin, $"Create runtime: {dumpFileName} ...", 1, 2, cancellationTokenSource);
+            Progress(TaskStatus.Begin, title, $"Create runtime: {dumpFileName} ...", 1, 2, cancellationTokenSource);
             runtimeInfo = dataTarget.ClrVersions[0]; // just using the first runtime
             Logger.ExtInfo("Creating runTime...", new { runtimeInfo.Version, runtimeInfo.Flavor });
             Runtime = runtimeInfo.CreateRuntime();
             Logger.ExtInfo("RunTime created...", new { Runtime.ClrInfo.Version, Runtime.ClrInfo.Flavor });
-            Reader = dataTarget.DataReader;
         }
         catch (Exception e)
         {
             Logger.Error(e);
             Status("Error: " + e.Message);
             Logger.Error(e.StackTrace);
-            Progress(TaskStatus.Failed, $"Failed to open {dumpFileName} !", 2, 2, cancellationTokenSource);
+            Progress(TaskStatus.Failed, "Fail", $"Failed to open {dumpFileName} !", 2, 2, cancellationTokenSource);
             return new DumpInfo();
         }
 
-        Progress(TaskStatus.End, $"Loaded: {dumpFileName}", 2, 2, cancellationTokenSource);
+        Progress(TaskStatus.End, title, $"Loaded: {dumpFileName}", 2, 2, cancellationTokenSource);
         Status(token.IsCancellationRequested ? $"Canceled: {dumpFileName}" : dumpFileName);
         var clrInfo = dataTarget!.ClrVersions.First();
-        
         return new DumpInfo
         {
             Version = clrInfo.Version,
@@ -129,8 +98,8 @@ public class DumpModel : MainModel
             TargetPlatform = dataTarget!.DataReader.TargetPlatform,
             NbThreads = Runtime.Threads.Length,
             NbSegments = Runtime!.Heap.Segments.Length,
-            Segments=Runtime!.Heap.Segments.Select(segment => (segment.End-segment.Start)/1_000_000).OrderByDescending(value => value).ToArray(),
-            NbModules = dataTarget.EnumerateModules().Count()            
+            SegmentSizesMo=Runtime!.Heap.Segments.Select(segment => (segment.End-segment.Start)/1_000_000).OrderByDescending(value => value).ToArray(),
+            NbModules = ModuleInfos.Length            
         };
     }
 
@@ -172,7 +141,8 @@ public class DumpModel : MainModel
         Logger.ExtInfo("Segments", new { Count = segments.Length });
         var nbSteps = segments.Length + 1;
 
-        Progress(TaskStatus.Begin, "Analyze type infos...", 0, nbSteps, cancellationTokenSource);
+        var title = "Analyze";
+        Progress(TaskStatus.Begin, title, "Analyze type infos...", 0, nbSteps, cancellationTokenSource);
         Batteries.Init();
 
         var clrTypeInfos = new Dictionary<string, ClrTypeInfo>(1024);
@@ -190,7 +160,7 @@ public class DumpModel : MainModel
                     clrTypeInfos.Clear();
                     workspaceDb.Database.EnsureDeleted();
                     workspaceDb.Dispose();
-                    Progress(TaskStatus.End, "Canceled.", nbSteps, nbSteps, cancellationTokenSource);
+                    Progress(TaskStatus.End, title, "Canceled.", nbSteps, nbSteps, cancellationTokenSource);
                     return null;
                 }
 
@@ -207,7 +177,7 @@ public class DumpModel : MainModel
                     var total = segment.End - segment.Start;
                     var percent = (delta / (float)total) ;
                     var msg = new { Segment = $"{i+1} / {segments.Length}", Size=$"{total/1_000_000:###,###,###,##0} Mo", Remains= $"{remains/1_000_000:###,##0} Mo", NbInstances = n.ToString("###,###,###,##0"), NbTypes=$"{clrTypeInfos.Count:###,###,##0}" }.ToLogString();
-                    Progress(TaskStatus.Running, msg, i+percent, nbSteps, cancellationTokenSource);
+                    Progress(TaskStatus.Running, title, msg, i+percent, nbSteps, cancellationTokenSource);
                     Logger.ExtInfo(msg);
                 }
                 
@@ -247,7 +217,7 @@ public class DumpModel : MainModel
                 }
             }
 
-            Progress(TaskStatus.Running, "Analyze type infos...", i+1, nbSteps, cancellationTokenSource);
+            Progress(TaskStatus.Running, title, "Analyze type infos...", i+1, nbSteps, cancellationTokenSource);
         }
 
         Logger.ExtInfo("Save ClrValue infos...", new { NbClrValues = clrValueInfos.Count.ToString("###,###,###,###") });
@@ -255,13 +225,15 @@ public class DumpModel : MainModel
         var values = clrTypeInfos.Values.ToArray();
         Logger.ExtInfo("Save ClrType infos...", new { NbTypenfos = values.Length });
         workspaceDb.BulkInsert(values);
-        Progress(TaskStatus.Running, "Save type infos...", nbSteps, nbSteps, cancellationTokenSource);
+        Progress(TaskStatus.Running, title, "Save type infos...", nbSteps, nbSteps, cancellationTokenSource);
         workspaceDb.SaveChanges();
         Logger.ExtInfo("Saved", new { DbFilePath, DbSize = (new FileInfo(DbFilePath).Length / 1_000_000).ToString("###,###,###,### Mo") });
-        Progress(TaskStatus.End, "Analyze done.", nbSteps, nbSteps, cancellationTokenSource);
+        Progress(TaskStatus.End, title, "Analyze done.", nbSteps, nbSteps, cancellationTokenSource);
         Status("Types Analyzed.");
         return workspaceDb;
     }
+
+    ModuleInfo[] ModuleInfos => dataTarget?.EnumerateModules().ToArray() ?? [];
 
     public ClrTypeInfo GetClrTypeInfo(int id)
     {
@@ -385,7 +357,7 @@ public class DumpModel : MainModel
             var elementValues = Enumerable.Range(0, values.Length)
                 .Select(i =>
                 {
-                    var address = arrType?.GetArrayElementAddress(arr.Address, i) ?? 0;
+                    var address = arrType.GetArrayElementAddress(arr.Address, i);
                     var value = values[i].ToString() ?? "_null_";
 
                     return new ClrPrimitiveInfoExt($"#{i}", $"{address:X}", type, value);

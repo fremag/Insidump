@@ -6,7 +6,7 @@ using Terminal.Gui.Views;
 
 namespace Insidump.Modules.OpenDumpFile;
 
-public class OpenDumpFileCommand(IMainView mainView) : AbstractMenuCommand("_File", "Open...", "Open new dump file", mainView, Key.O)
+public class OpenDumpFileCommand(IMainView mainView) : AbstractMenuCommand("_File", "Open...", "Open new dump file", mainView, Key.O.WithCtrl)
 {
     public override void Action()
     {

@@ -78,12 +78,13 @@ public class TaskWindow : Window
         CancellationTokenSource.Cancel();
     }
 
-    public void Update(string text, float progress, float max, CancellationTokenSource cancellationTokenSource)
+    public void Update(string title, string text, float progress, float max, CancellationTokenSource cancellationTokenSource)
     {
         Logger.ExtInfo(new {text, progress, max, cancellationTokenSource.IsCancellationRequested });
         CancellationTokenSource = cancellationTokenSource;
         Application.Invoke(() =>
         {
+            Title = title;
             label.Text = text;
             progressBar.Fraction = progress / max;
             progressBar.Visible = true;
@@ -94,11 +95,12 @@ public class TaskWindow : Window
         });
     }
 
-    public void Stop(string text)
+    public void Stop(string title, string text)
     {
         Logger.ExtInfo(new {text});
         Application.Invoke(() =>
         {
+            Title = title;
             label.Text = text;
             progressBar.Fraction = 0;
             progressBar.Visible = false;

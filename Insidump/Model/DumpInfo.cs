@@ -13,6 +13,6 @@ public class DumpInfo
     public ModuleInfo ModuleInfo { get; set; }
     public int NbThreads { get; set; }
     public int NbSegments { get; set; }
-    public ulong[] Segments { get; set; }
+    public ulong[] SegmentSizesMo { get; set; } = [];
     public int NbModules { get; set; }
 }

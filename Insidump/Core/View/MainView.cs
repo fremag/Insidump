@@ -14,6 +14,9 @@ public interface IMainView
     IMessageBus MessageBus { get; }
     void NewTab(string name, Terminal.Gui.ViewBase.View view);
     void Quit();
+    void CloseTab();
+    void NextTab();
+    void PreviousTab();
 }
 
 public interface IMainModel : IDisposable
@@ -84,6 +87,43 @@ public class MainView<T> : Toplevel, IMainView,
         Application.RequestStop();
     }
 
+    public void CloseTab()
+    {
+        if (MainTabView.SelectedTab != null)
+        {
+            MainTabView.RemoveTab(MainTabView.SelectedTab);
+        }
+    }
+
+    public void PreviousTab()
+    {
+        if (MainTabView.SelectedTab == null)
+        {
+            return;
+        }
+
+        var tabIdx = MainTabView.Tabs.IndexOf(MainTabView.SelectedTab);
+        var nextTab = (tabIdx + 1) % MainTabView.Tabs.Count;
+        MainTabView.SelectedTab = MainTabView.Tabs.ElementAt(nextTab);
+    }
+
+    public void NextTab()
+    {
+        if (MainTabView.SelectedTab == null)
+        {
+            return;
+        }
+
+        var tabIdx = MainTabView.Tabs.IndexOf(MainTabView.SelectedTab);
+        var nextTab = tabIdx - 1;
+        if (nextTab < 0)
+        {
+            nextTab = MainTabView.Tabs.Count - 1;
+        }
+        
+        MainTabView.SelectedTab = MainTabView.Tabs.ElementAt(nextTab);
+    }
+
     public void HandleMessage(DisplayViewMessage message)
     {
         NewTab(message.Name, message.View);
@@ -107,14 +147,14 @@ public class MainView<T> : Toplevel, IMainView,
         switch (message.Status)
         {
             case TaskStatus.Begin:
-                TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
+                TaskWindow.Update(message.Title, message.Text, message.Progress, message.Max, message.CancellationTokenSource);
                 break;
             case TaskStatus.Running:
-                TaskWindow.Update(message.Name, message.Progress, message.Max, message.CancellationTokenSource);
+                TaskWindow.Update(message.Title, message.Text, message.Progress, message.Max, message.CancellationTokenSource);
                 break;
             case TaskStatus.End:
             case TaskStatus.Failed:
-                TaskWindow.Stop(message.Name);
+                TaskWindow.Stop(message.Title, message.Text);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -168,7 +208,7 @@ public class MainView<T> : Toplevel, IMainView,
 
     protected virtual AbstractMenuCommand[] GetMenuCommands()
     {
-        return [new QuitCommand(this)];
+        return [new CloseTabCommand(this), new PreviousTabCommand(this), new NextTabCommand(this), new QuitCommand(this)];
     }
 
     protected virtual IEnumerable<object> GetMessageHandlers()
