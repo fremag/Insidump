@@ -10,18 +10,24 @@ namespace Insidump.Modules.ClrTypeInfos;
 public class TypeInfosView : ViewBase
 {
     private DumpModel DumpModel { get; }
-    private ObjectTableSource<ClrTypeInfo> objectTableSource;
-    private ObjectTableView<ClrTypeInfo> tableView;
+    private readonly ObjectTableSource<ClrTypeInfo> objectTableSource;
+    private readonly ObjectTableView<ClrTypeInfo> tableView;
     
     public TypeInfosView(DumpModel dumpModel)
     {
         DumpModel = dumpModel;
         var clrTypeInfos = DumpModel
             .GetClrTypeInfos()
-            .Values
+            .Values;
+        
+        var clrTypeItems = clrTypeInfos
             .OrderByDescending(info => info.Nb)
             .ToArray();
-        objectTableSource = new ObjectTableSource<ClrTypeInfo>(clrTypeInfos);
+
+        var clrTypes = clrTypeInfos
+            .ToDictionary(info => info.TypeName, info => DumpModel.GetClrObject(info.Address).Type);
+            
+        objectTableSource = new ObjectTableSource<ClrTypeInfo>(clrTypeItems);
         tableView = new ObjectTableView<ClrTypeInfo>(objectTableSource)
         {
             Y = 1

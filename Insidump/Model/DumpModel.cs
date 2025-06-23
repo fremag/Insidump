@@ -12,8 +12,6 @@ namespace Insidump.Model;
 
 public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 {
-    private DataTarget? dataTarget;
-    private ClrInfo? runtimeInfo;
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static Logger DbLogger { get; } = LogManager.GetLogger("Sqlite");
 
@@ -22,6 +20,8 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 
     private string DumpFilePath { get; set; } = string.Empty;
     private IClrRuntime? Runtime { get; set; }
+    private DataTarget? dataTarget;
+    private ClrInfo? runtimeInfo;
 
     private string DbFilePath { get; set; } = string.Empty;
     private WorkspaceDbContext? WorkspaceDb { get; set; }
@@ -98,7 +98,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             TargetPlatform = dataTarget!.DataReader.TargetPlatform,
             NbThreads = Runtime.Threads.Length,
             NbSegments = Runtime!.Heap.Segments.Length,
-            SegmentSizesMo=Runtime!.Heap.Segments.Select(segment => (segment.End-segment.Start)/1_000_000).OrderByDescending(value => value).ToArray(),
+            SegmentSizesMo = Runtime!.Heap.Segments.Select(segment => (segment.End-segment.Start)/1_000_000).OrderByDescending(value => value).ToArray(),
             NbModules = ModuleInfos.Length            
         };
     }
@@ -235,6 +235,8 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 
     ModuleInfo[] ModuleInfos => dataTarget?.EnumerateModules().ToArray() ?? [];
 
+    public IClrType? GetClrType(string typeName) => Runtime!.Heap.GetTypeByName(typeName);
+
     public ClrTypeInfo GetClrTypeInfo(int id)
     {
         if (WorkspaceDb == null)
@@ -312,6 +314,8 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             .ToArray();
         return clrObjects;
     }
+
+    public IClrValue GetClrObject(ulong objAddress) => Runtime!.Heap.GetObject(objAddress);
 
     public static IClrObjectInfoExt[] GetFields(IClrValue clrValue)
     {

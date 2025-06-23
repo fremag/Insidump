@@ -10,7 +10,7 @@ public class DumpInfo
     public string DisplayName { get; set; } = string.Empty;
     public OSPlatform TargetPlatform { get; set; }
     public ClrFlavor Flavor { get; set; }
-    public ModuleInfo ModuleInfo { get; set; }
+    public ModuleInfo? ModuleInfo { get; set; } 
     public int NbThreads { get; set; }
     public int NbSegments { get; set; }
     public ulong[] SegmentSizesMo { get; set; } = [];
