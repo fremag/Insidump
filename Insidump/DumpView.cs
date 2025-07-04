@@ -5,6 +5,7 @@ using Insidump.Model;
 using Insidump.Modules.ClrObjects;
 using Insidump.Modules.ClrTypeInfos;
 using Insidump.Modules.OpenDumpFile;
+using Insidump.Modules.Segments;
 using Insidump.Modules.Threads;
 using NLog;
 
@@ -19,7 +20,9 @@ public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<Dum
                 new OpenDumpFileCommand(this),
                 new DisplayClrTypeInfosCommand(this),
                 new AnalyzeCommand(this),
-                new DisplayClrThreadInfosCommand(this)
+                new DisplayClrThreadInfosCommand(this),
+                new DisplaySegmentsCommand(this)
+
             }
             .Concat(base.GetMenuCommands())
             .ToArray();
@@ -34,7 +37,8 @@ public class DumpView(MessageBus messageBus, DumpModel mainModel) : MainView<Dum
             new DisplayClrTypeInfosHandler(MainModel),
             new DisplayClrThreadInfosHandler(MainModel),
             new AnalyzeHandler(MainModel),
-            new DisplayClrObjectsHandler(MainModel)
+            new DisplayClrObjectsHandler(MainModel),
+            new DisplaySegmentsHandler(MainModel)
         ];
     }
 }

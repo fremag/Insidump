@@ -448,4 +448,6 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                 return Enumerable.Range(0, arrayLength).Select(_ => '?').Cast<object>().ToArray();
         }
     }
+
+    public SegmentInfo[] GetSegmentInfos() => Runtime!.Heap.Segments.Select(segment => new SegmentInfo(segment)).ToArray();
 }
