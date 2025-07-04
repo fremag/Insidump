@@ -24,7 +24,7 @@ public class TaskWindow : Window
         X = Pos.Center();
         Y = Pos.Center();
         Width = Dim.Percent(80);
-        Height = 8;
+        Height = 10;
         Modal = true;
         Title = "Task";
 
@@ -33,7 +33,7 @@ public class TaskWindow : Window
             Width = Dim.Percent(90),
             Height = 1,
             X = Pos.Center(),
-            Y = 3,
+            Y = 4,
             ProgressBarFormat = ProgressBarFormat.SimplePlusPercentage,
             BidirectionalMarquee = true
         };
@@ -42,7 +42,7 @@ public class TaskWindow : Window
         {
             Text = "Cancel",
             X = Pos.Center(),
-            Y = 5
+            Y = 6
         };
         cancelButton.Accepting += Cancel;
 
@@ -50,7 +50,7 @@ public class TaskWindow : Window
         {
             Text = "Close",
             X = Pos.Left(cancelButton),
-            Y = 5,
+            Y = 6,
             Visible = false
         };
         closeButton.Accepting += Close;

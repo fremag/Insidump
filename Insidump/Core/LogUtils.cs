@@ -20,6 +20,18 @@ public static class LogUtils
         logger.Info($"{caller}: {sb}");
     }
 
+    public static void ExtErr(this Logger logger, object? value1 = null, object? value2 = null, object? value3 = null, object? value4 = null, object? value5 = null, Exception? ex = null, [CallerMemberName] string caller = "")
+    {
+        if (!logger.IsErrorEnabled)
+        {
+            return;
+        }
+
+        var sb = GetLogString(value1, value2, value3, value4, value5, ex);
+
+        logger.Error($"{caller}: {sb}");
+    }
+
     public static string ToLogString(this object? value1)
     {
         var sb = GetLogString(value1);

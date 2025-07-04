@@ -61,7 +61,8 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                 CacheFields = true,
                 CacheMethods = true,
                 CacheTypes = true,
-                UseOSMemoryFeatures = true,
+                CacheStackTraces = true,
+                UseOSMemoryFeatures = !true,
                 MaxDumpCacheSize = 10_000_000_000
             };
 
@@ -81,7 +82,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             Logger.Error(e);
             Status("Error: " + e.Message);
             Logger.Error(e.StackTrace);
-            Progress(TaskStatus.Failed, "Fail", $"Failed to open {dumpFileName} !", 2, 2, cancellationTokenSource);
+            Progress(TaskStatus.Failed, "Fail", $"Failed to open {dumpFileName} !\n{e.Message}", 2, 2, cancellationTokenSource);
             return new DumpInfo();
         }
 
@@ -216,8 +217,6 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                     clrValueInfos.Clear();
                 }
             }
-
-            Progress(TaskStatus.Running, title, "Analyze type infos...", i+1, nbSteps, cancellationTokenSource);
         }
 
         Logger.ExtInfo("Save ClrValue infos...", new { NbClrValues = clrValueInfos.Count.ToString("###,###,###,###") });
