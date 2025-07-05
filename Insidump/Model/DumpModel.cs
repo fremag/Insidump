@@ -449,5 +449,5 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         }
     }
 
-    public SegmentInfo[] GetSegmentInfos() => Runtime!.Heap.Segments.Select(segment => new SegmentInfo(segment)).ToArray();
+    public SegmentInfo[] GetSegmentInfos() => Runtime!.Heap.Segments.Select((segment, i) => new SegmentInfo(i, segment)).ToArray();
 }
