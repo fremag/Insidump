@@ -16,7 +16,7 @@ internal static class Program
         Application.QuitKey = Key.F10;
         MessageBus messageBus = new();
         Trace.Listeners.Clear();
-        Trace.Listeners.Add(new NLog.NLogTraceListener { Name = "ClrMd", DefaultLogLevel = LogLevel.Trace});
+        Trace.Listeners.Add(new DefaultTraceListener { Name = "ClrMd"});
         Environment.SetEnvironmentVariable("ClrMD_TraceSymbolRequests", "true");
         using var mainModel = new DumpModel(messageBus);
         var app = new DumpView(messageBus, mainModel);
