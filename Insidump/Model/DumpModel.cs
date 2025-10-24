@@ -12,6 +12,7 @@ namespace Insidump.Model;
 
 public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 {
+    private const int MaxArrayElement = 1024;
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static Logger DbLogger { get; } = LogManager.GetLogger("Sqlite");
 
@@ -288,8 +289,9 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
     {
         var threadClrValueInfos = GetClrValueInfos<Thread>()
             .Select(obj => Runtime!.Heap.GetObject(obj.Address))
-            .ToDictionary(clrObj => clrObj.ReadField<int>("_managedThreadId"));
-
+            .GroupBy(clrObj => clrObj.ReadField<int>("_managedThreadId"))
+            .ToDictionary(values => values.Key, values => values.First());
+        
         var threadInfos = Runtime!.Threads
             .Where(thread => thread.IsAlive)
             .Select(thread => new ClrThreadInfo(thread, threadClrValueInfos.TryGetValue(thread.ManagedThreadId, out var threadClrValue) ? threadClrValue : null))
@@ -344,7 +346,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
 
             if (elementType == ClrElementType.Class)
             {
-                var elementObjects = Enumerable.Range(0, arr.Length)
+                var elementObjects = Enumerable.Range(0, Math.Min(arr.Length, MaxArrayElement))
                     .Select(i =>
                     {
                         var obj = arr.GetObjectValue(i);

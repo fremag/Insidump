@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Insidump.Model;
 
 [PrimaryKey(nameof(Address))]
+[Index(nameof(ClrTypeId))]
 public class ClrValueInfo
 {
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
