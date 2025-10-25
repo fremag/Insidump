@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DumpDummy/DumpDummy.csproj" />
+  <Project Path="Insidump.Tests/Insidump.Tests.csproj" />
+  <Project Path="Insidump/Insidump.csproj" />
+</Solution>
