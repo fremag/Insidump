@@ -4,6 +4,7 @@ using Insidump.Model;
 using Insidump.Modules.OpenDumpFile;
 using NLog;
 using Terminal.Gui.App;
+using Terminal.Gui.Configuration;
 using Terminal.Gui.Input;
 
 namespace Insidump;
@@ -12,6 +13,11 @@ internal static class Program
 {
     private static void Main(string[] args)
     {
+        ConfigurationManager.Enable(ConfigLocations.AppResources);
+        ConfigurationManager.Load(ConfigLocations.AppResources);
+        var names = ThemeManager.GetThemeNames();
+        ThemeManager.Theme = "Insidump";
+        
         Application.Init();
         Application.QuitKey = Key.F10;
         MessageBus messageBus = new();

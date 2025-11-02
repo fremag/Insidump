@@ -378,8 +378,19 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
             {
                 var displayFieldName = GetDisplayFieldName(field);
                 var fieldName = field.Name;
-                var value = field.Type!.IsValueType ? clrValue.ReadValueTypeField(fieldName!) : clrValue.ReadObjectField(fieldName!);
-
+                IClrValue value;
+                if (field.Type!.IsObjectReference)
+                {
+                    value = clrValue.ReadObjectField(fieldName!);
+                }
+                else if (field.Type!.IsValueType)
+                {
+                    value =  clrValue.ReadValueTypeField(fieldName!);
+                }
+                else
+                {
+                    value = new ClrObject();
+                }
                 return new ClrObjectInfoExt(displayFieldName, value);
             })
             .ToArray();

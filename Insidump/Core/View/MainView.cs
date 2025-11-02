@@ -56,7 +56,8 @@ public class MainView<T> : Toplevel, IMainView,
         Height = Dim.Fill(1),
         Enabled = true,
         CanFocus = true,
-        Style = { ShowTopLine = true, ShowBorder = true, TabsOnBottom = false }
+        Style = { ShowTopLine = true, ShowBorder = true, TabsOnBottom = false },
+        
     };
 
     protected T MainModel { get; }
@@ -77,6 +78,10 @@ public class MainView<T> : Toplevel, IMainView,
 
             newTab.MouseEvent += OnMouse;
             MainTabView.AddTab(newTab, true);
+            if (TaskWindow.Visible)
+            {
+                TaskWindow.SetFocus();
+            }
             MainTabView.NeedsDraw = true;
         });
     }

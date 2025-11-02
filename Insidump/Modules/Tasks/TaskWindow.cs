@@ -106,8 +106,8 @@ public class TaskWindow : Window
             progressBar.Visible = false;
             cancelButton.Visible = false;
             closeButton.Visible = true;
-            closeButton.SetFocus();
             Visible = true;
+            closeButton.SetFocus();
         });
     }
 }

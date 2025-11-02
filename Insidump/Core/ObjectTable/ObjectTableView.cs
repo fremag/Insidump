@@ -1,12 +1,30 @@
 ﻿using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using Attribute = Terminal.Gui.Drawing.Attribute;
 
 namespace Insidump.Core.ObjectTable;
 
 public class ObjectTableView<T> : TableView
 {
+    private readonly Scheme schemeRowEven = new()
+    {
+        Normal = new Attribute {  Background = Color.Black, Foreground = Color.Gray },
+        Active = new Attribute { Background = Color.Green, Foreground = Color.Gray  },
+        Focus = new Attribute { Background = Color.Green, Foreground = Color.White},
+    };
+    private readonly Scheme schemeRowOdd = new()
+    {
+        Normal = new Attribute { Background = Color.Black, Foreground = Color.DarkGray },
+        Active = new Attribute { Background = Color.Green, Foreground = Color.Gray  },
+        Focus = new Attribute { Background = Color.Green , Foreground = Color.White},
+    };
+
+    private ObjectTableSource<T> ObjectTableSource { get; }
+    private int Offset { get; }
+
     public ObjectTableView(ObjectTableSource<T> objectTableSource, int offset=0)
     {
         ObjectTableSource = objectTableSource;
@@ -35,8 +53,14 @@ public class ObjectTableView<T> : TableView
                 Visible = attribute.Visible,
                 MaxWidth = attribute.MaxWidth,
                 MinAcceptableWidth = 10,
+                ColorGetter = MyScheme
             };
         }
+    }
+
+    private Scheme MyScheme(CellColorGetterArgs args)
+    {
+        return args.RowIndex % 2 == 0 ? schemeRowEven : schemeRowOdd;
     }
 
     private void OnMouseEvent(object? sender, MouseEventArgs e)
@@ -47,9 +71,6 @@ public class ObjectTableView<T> : TableView
             Application.Invoke(() => NeedsDraw = true);
         }
     }
-
-    private ObjectTableSource<T> ObjectTableSource { get; }
-    public int Offset { get; }
 
     public void SetFilter(string regex, string column)
     {
