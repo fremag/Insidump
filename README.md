@@ -1,7 +1,7 @@
 # Insidump
 Analyze .net memory dump file with terminal ui
 
-![image](https://github.com/user-attachments/assets/e54da970-b3d5-4fae-ad78-652248682efb)
+<img width="1468" height="789" alt="image" src="https://github.com/user-attachments/assets/04049c4e-00a8-45b6-bada-18616cd0877b" />
 
 It's **NOT** [MemoScope 2](https://github.com/fremag/MemoScope.Net)
 
