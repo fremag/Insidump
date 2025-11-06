@@ -6,7 +6,7 @@ Analyze .net memory dump file with terminal ui
 It's **NOT** [MemoScope 2](https://github.com/fremag/MemoScope.Net)
 
 MemoScope was written in 2015 with Winforms and its goal was to analyze dump files from .Net framwork 32 bit (< 4 Go)
-I don't think a wepapp is a good choice here so no Blazor, React etc
+I don't think a web app is a good choice here so no Blazor, React etc
 WinForms is obsolete and I don't want to try WPF, MAUI, WinUI, Electron etc. 
 
 So why not a text ui ? (I was a fan of [Norton Commander](https://fr.wikipedia.org/wiki/Norton_Commander) back in the days)
