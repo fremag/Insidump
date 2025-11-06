@@ -1,7 +1,10 @@
-﻿using Insidump.Core.Messages;
+﻿using System.Data;
+using Insidump.Core.Messages;
 using Insidump.Modules.Tasks;
 using NLog;
 using Terminal.Gui.App;
+using Terminal.Gui.Configuration;
+using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
@@ -19,9 +22,7 @@ public interface IMainView
     void PreviousTab();
 }
 
-public interface IMainModel : IDisposable
-{
-}
+public interface IMainModel : IDisposable;
 
 public class MainView<T> : Toplevel, IMainView,
     IMessageListener<StatusMessage>,
@@ -29,6 +30,13 @@ public class MainView<T> : Toplevel, IMainView,
     IMessageListener<TaskMessage>
     where T : IMainModel
 {
+    private static string TabSchemeName => "Tabs";
+
+    private Logger Logger { get; }
+    private StatusBar StatusBar { get; } = new() { CanFocus = false };
+    private Shortcut StatusLabel { get; } = new(Key.Empty, string.Empty, () => { });
+    private MenuBarv2 MainMenuBar { get; }
+
     protected MainView(MessageBus messageBus, T mainModel, Logger logger)
     {
         MessageBus = messageBus;
@@ -44,11 +52,6 @@ public class MainView<T> : Toplevel, IMainView,
         Add(MainMenuBar, MainTabView, StatusBar, TaskWindow);
     }
 
-    private Logger Logger { get; }
-    private StatusBar StatusBar { get; } = new() { CanFocus = false };
-    private Shortcut StatusLabel { get; } = new(Key.Empty, string.Empty, () => { });
-    private MenuBarv2 MainMenuBar { get; }
-
     private TabView MainTabView { get; } = new()
     {
         Y = 1,
@@ -57,7 +60,7 @@ public class MainView<T> : Toplevel, IMainView,
         Enabled = true,
         CanFocus = true,
         Style = { ShowTopLine = true, ShowBorder = true, TabsOnBottom = false },
-        
+        SchemeName = TabSchemeName
     };
 
     protected T MainModel { get; }
@@ -67,13 +70,15 @@ public class MainView<T> : Toplevel, IMainView,
 
     public void NewTab(string name, Terminal.Gui.ViewBase.View view)
     {
+        view.SchemeName = nameof(Schemes.Base);
         Logger.ExtInfo(new { name, TabType = view.GetType().Name });
         Application.Invoke(() =>
         {
             var newTab = new Tab
             {
                 DisplayText = name,
-                View = view
+                View = view,
+                SchemeName = TabSchemeName,
             };
 
             newTab.MouseEvent += OnMouse;
@@ -213,11 +218,43 @@ public class MainView<T> : Toplevel, IMainView,
 
     protected virtual AbstractMenuCommand[] GetMenuCommands()
     {
-        return [new CloseTabCommand(this), new PreviousTabCommand(this), new NextTabCommand(this), new QuitCommand(this)];
+        var themeCommands = ThemeManager.GetThemeNames()
+            .Select(themeName => new ThemeCommand(themeName, "_Theme", themeName, this))
+            .Cast<AbstractMenuCommand>()
+            .ToList();
+        themeCommands.AddRange([
+            new CloseTabCommand(this), new PreviousTabCommand(this), 
+            new NextTabCommand(this), new QuitCommand(this)]);        
+        return themeCommands.ToArray();
     }
 
     protected virtual IEnumerable<object> GetMessageHandlers()
     {
         return [];
+    }
+}
+
+public class ThemeCommand(string themeName, string menu, string item, IMainView mainView) : AbstractMenuCommand(menu, item, string.Empty, mainView, null)
+{
+    public string ThemeName { get; } = themeName;
+
+    public override void Action()
+    {
+        var schemes = ThemeManager.GetThemes()[ThemeName]["Schemes"].PropertyValue as Dictionary<string, Scheme>;
+        if (!schemes!.ContainsKey("Tabs"))
+        {
+            schemes["Tabs"] = schemes[nameof(Schemes.Base)];
+        }
+
+        if (!schemes!.ContainsKey("TableRow"))
+        {
+            schemes["TableRow"] = schemes[nameof(Schemes.Base)];
+        }
+
+        if (!schemes!.ContainsKey("TableRowBis"))
+        {
+            schemes["TableRowBis"] = schemes[nameof(Schemes.Base)];
+        }
+        ThemeManager.Theme = ThemeName;
     }
 }

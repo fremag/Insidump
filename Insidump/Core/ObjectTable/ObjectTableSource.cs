@@ -79,6 +79,7 @@ public class ObjectTableSource<T> : ITableSource
         if (string.IsNullOrEmpty(regex))
         {
             ColumnNames[idx] = RawColumnNames[idx];
+            DisplayValues = Values;
             return;
         }
         

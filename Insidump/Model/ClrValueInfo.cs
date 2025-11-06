@@ -10,5 +10,5 @@ public class ClrValueInfo
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public ulong Address { get; init; }
 
-    public int ClrTypeId { get; init; }
+    public short ClrTypeId { get; init; }
 }

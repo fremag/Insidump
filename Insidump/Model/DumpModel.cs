@@ -16,7 +16,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private static Logger DbLogger { get; } = LogManager.GetLogger("Sqlite");
 
-    private static int BatchSize => 500_000;
+    private static int BatchSize => 250_000;
     private static int BatchProgress => 32*1_024;
 
     private string DumpFilePath { get; set; } = string.Empty;
@@ -135,6 +135,10 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         var workspaceDb = new WorkspaceDbContext(GetOptionsBuilder().Options);
         workspaceDb.Database.EnsureDeleted();
         workspaceDb.Database.EnsureCreated();
+        BulkConfig bulkConfig = new ()
+        {
+            BatchSize = BatchSize
+        };
 
         Status("Analyze type infos...");
         var segments = Runtime!.Heap.Segments
@@ -194,7 +198,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                 {
                     typeInfo = new ClrTypeInfo
                     {
-                        Id = clrTypeInfos.Count,
+                        Id = (short)clrTypeInfos.Count,
                         TypeName = typeName,
                         Address = clrValue.Address
                     };
@@ -213,7 +217,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
                 if (clrValueInfos.Count > BatchSize)
                 {
                     Logger.ExtInfo("Save ClrValue infos...", new { NbClrValues = clrValueInfos.Count.ToString("###,###,###,###") });
-                    workspaceDb.BulkInsert(clrValueInfos);
+                    workspaceDb.BulkInsert(clrValueInfos, bulkConfig);
                     Logger.ExtInfo("Saved", new { DbFilePath, DbSize = (new FileInfo(DbFilePath).Length / 1_000_000).ToString("###,###,###,### Mo") });
                     clrValueInfos.Clear();
                 }
@@ -224,7 +228,7 @@ public class DumpModel(MessageBus messageBus) : MainModel(messageBus)
         workspaceDb.BulkInsert(clrValueInfos);
         var values = clrTypeInfos.Values.ToArray();
         Logger.ExtInfo("Save ClrType infos...", new { NbTypenfos = values.Length });
-        workspaceDb.BulkInsert(values);
+        workspaceDb.BulkInsert(values, bulkConfig);
         Progress(TaskStatus.Running, title, "Save type infos...", nbSteps, nbSteps, cancellationTokenSource);
         workspaceDb.SaveChanges();
         Logger.ExtInfo("Saved", new { DbFilePath, DbSize = (new FileInfo(DbFilePath).Length / 1_000_000).ToString("###,###,###,### Mo") });

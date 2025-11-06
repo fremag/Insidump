@@ -30,16 +30,12 @@
         <None Update="NLog.config">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Include=".tui\config.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Modules\ModuleInfos\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="config.json" />
-      <EmbeddedResource Include="config.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </EmbeddedResource>
     </ItemGroup>
 </Project>

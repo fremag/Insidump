@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Insidump.Core;
 using Insidump.Core.Messages;
 using Insidump.Model;
 using Insidump.Modules.OpenDumpFile;
@@ -11,13 +12,16 @@ namespace Insidump;
 
 internal static class Program
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static void Main(string[] args)
     {
-        ConfigurationManager.Enable(ConfigLocations.AppResources);
-        ConfigurationManager.Load(ConfigLocations.AppResources);
-        var names = ThemeManager.GetThemeNames();
+        Logger.ExtInfo("Starting Insidump...");
+        ConfigurationManager.Enable(ConfigLocations.All);
+        ConfigurationManager.Load(ConfigLocations.All);
+        // Terminal.Gui.Drivers.Application.ForceDriver = "NetDriver";
+        // Environment.SetEnvironmentVariable("WT_SESSION", "12345");
         ThemeManager.Theme = "Insidump";
-        
+            
         Application.Init();
         Application.QuitKey = Key.F10;
         MessageBus messageBus = new();
@@ -28,6 +32,7 @@ internal static class Program
         var app = new DumpView(messageBus, mainModel);
         if (args.Length > 0)
         {
+            Logger.ExtInfo($"Open dump file. ${new{Dumpfile=args[0]}.ToLogString()}");
             Task.Run(() =>
             {
                 while (! app.IsLoaded)
@@ -40,5 +45,6 @@ internal static class Program
         Application.Run(app);
         app.Dispose();
         Application.Shutdown();
+        Logger.ExtInfo("Done.");
     }
 }

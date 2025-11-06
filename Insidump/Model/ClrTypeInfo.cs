@@ -7,7 +7,7 @@ namespace Insidump.Model;
 public class ClrTypeInfo
 {
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
-    public int Id { get; init; }
+    public short Id { get; init; }
 
     [TableColumn(Format = "{0,9:###,###,###}", Sortable = true)]
     public int Nb { get; set; }

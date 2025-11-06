@@ -52,8 +52,26 @@
           {
             "TopLevel": {
               "Normal": {
-                "Foreground": "Yellow",
-                "Background": "Black",
+                "Foreground": "Gray",
+                "Background": "DarkSlateGray",
+                "Style": "None"
+              }
+            }
+          },
+          {
+            "TableRow": {
+              "Normal": {
+                "Foreground": "Gray",
+                "Background": "#204040",
+                "Style": "None"
+              }
+            }
+          },
+          {
+            "TableRowBis": {
+              "Normal": {
+                "Foreground": "Gray",
+                "Background": "DarkSlateGray",
                 "Style": "None"
               }
             }
@@ -61,28 +79,28 @@
           {
             "Base": {
               "Normal": {
-                "Foreground": "Yellow",
-                "Background": "Black",
+                "Foreground": "Gray",
+                "Background": "DarkSlateGray",
                 "Style": "None"
               },
               "Active": {
-                "Foreground": "Yellow",
-                "Background": "Black",
+                "Foreground": "LightGray",
+                "Background": "DarkSlateGray",
                 "Style": "Bold"
               },
               "Highlight": {
-                "Foreground": "Yellow",
-                "Background": "Black",
+                "Foreground": "White",
+                "Background": "DarkSlateGray",
                 "Style": "Italic"
               },
               "Editable": {
-                "Foreground": "Yellow",
-                "Background": "Charcoal",
+                "Foreground": "White",
+                "Background": "Black",
                 "Style": "None"
               },
               "ReadOnly": {
                 "Foreground": "Yellow",
-                "Background": "Charcoal",
+                "Background": "DarkSlateGray",
                 "Style": "Faint"
               }
             }
@@ -91,27 +109,27 @@
             "Dialog": {
               "Normal": {
                 "Foreground": "Black",
-                "Background": "Yellow",
+                "Background": "DarkSlateGray",
                 "Style": "Bold"
               },
               "Active": {
                 "Foreground": "Black",
-                "Background": "Yellow",
+                "Background": "DarkSlateGray",
                 "Style": "Bold"
               },
               "Highlight": {
                 "Foreground": "Black",
-                "Background": "Yellow",
+                "Background": "DarkSlateGray",
                 "Style": "None"
               },
               "Editable": {
-                "Foreground": "Yellow",
-                "Background": "Charcoal",
+                "Foreground": "White",
+                "Background": "DarkSlateGray",
                 "Style": "None"
               },
               "ReadOnly": {
                 "Foreground": "Yellow",
-                "Background": "Charcoal",
+                "Background": "DarkSlateGray",
                 "Style": "Faint"
               }
             }
@@ -120,27 +138,27 @@
             "Menu": {
               "Normal": {
                 "Foreground": "Black",
-                "Background": "Yellow",
+                "Background": "SeaGreen",
                 "Style": "Bold"
               },
               "Active": {
-                "Foreground": "Black",
-                "Background": "Yellow",
-                "Style": "Bold"
+                "Foreground": "White",
+                "Background": "SeaGreen",
+                "Style": "Italic"
               },
               "Highlight": {
-                "Foreground": "Black",
-                "Background": "Yellow",
-                "Style": "None"
+                "Foreground": "Yellow",
+                "Background": "SeaGreen",
+                "Style": "Bold"
               },
               "Editable": {
-                "Foreground": "Yellow",
-                "Background": "Charcoal",
+                "Foreground": "Black",
+                "Background": "SeaGreen",
                 "Style": "None"
               },
               "ReadOnly": {
-                "Foreground": "Yellow",
-                "Background": "Charcoal",
+                "Foreground": "Black",
+                "Background": "SeaGreen",
                 "Style": "Faint"
               }
             }
@@ -148,28 +166,57 @@
           {
             "Error": {
               "Normal": {
-                "Foreground": "Yellow",
-                "Background": "Black",
+                "Foreground": "Red",
+                "Background": "White",
                 "Style": "Italic"
               },
               "Active": {
-                "Foreground": "Yellow",
+                "Foreground": "Red",
                 "Background": "Black",
                 "Style": "Bold,Italic"
               },
               "Highlight": {
-                "Foreground": "Yellow",
+                "Foreground": "Red",
                 "Background": "Black",
                 "Style": "Italic"
               },
               "Editable": {
-                "Foreground": "Yellow",
-                "Background": "Charcoal",
+                "Foreground": "Red",
+                "Background": "DarkSlateGray",
                 "Style": "Italic"
               },
               "ReadOnly": {
+                "Foreground": "Red",
+                "Background": "DarkSlateGray",
+                "Style": "Faint,Italic"
+              }
+            }
+          },
+          {
+            "Tabs": {
+              "Normal": {
+                "Foreground": "DarkGrey",
+                "Background": "DarkSlateGray",
+                "Style": "None"
+              },
+              "Active": {
+                "Foreground": "White",
+                "Background": "DarkSlateGray",
+                "Style": "Bold"
+              },
+              "Highlight": {
+                "Foreground": "White",
+                "Background": "DarkSlateGray",
+                "Style": "Italic"
+              },
+              "Editable": {
                 "Foreground": "Yellow",
-                "Background": "Charcoal",
+                "Background": "DarkSlateGray",
+                "Style": "Italic"
+              },
+              "ReadOnly": {
+                "Foreground": "Pink",
+                "Background": "DarkSlateGray",
                 "Style": "Faint,Italic"
               }
             }
